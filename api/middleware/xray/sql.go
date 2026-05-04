@@ -37,6 +37,6 @@ var (
 	NewClientQuery = `
 	INSERT INTO public.vless_clients (invite_id, user_id, alias)
 	VALUES ($1, $2, $3)
-	RETURNING id, access_id, user_id, invite_id, alias, status, created_at, updated_at
+	RETURNING id, alias, status, created_at, updated_at
 	`
 )

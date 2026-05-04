@@ -122,14 +122,14 @@ func SetRoleForUser(writer http.ResponseWriter, request *http.Request) {
 	utils.WriteJSON(writer, http.StatusOK, userOut)
 }
 
-func GetRole(writer http.ResponseWriter, request *http.Request) {
+func GetRoleById(writer http.ResponseWriter, request *http.Request) {
 	roleIdStr := request.PathValue("role_id")
 	roleId, err := strconv.ParseInt(roleIdStr, 10, 64)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	roleOut, err := security.SecSrv.GetRole(roleId)
+	roleOut, err := security.SecSrv.GetRoleById(roleId)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

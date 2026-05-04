@@ -21,6 +21,11 @@ func main() {
 	// XRay Service
 	mux.Handle("GET /api/v1/xray/config", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetConfig)))
 
+	// Invite Service
+	mux.Handle("POST /api/v1/invite/new",
+		handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(2, http.HandlerFunc(handlers.NewInvite))))
+	mux.Handle("POST /api/v1/invite/activate", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.ActivateInvite)))
+
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: withRecover(mux),

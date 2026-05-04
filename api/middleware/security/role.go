@@ -64,7 +64,7 @@ func (SecSrv *SecurityService) SetRoleForUser(userId int64, roleId int64) (*User
 	return &userOut, nil
 }
 
-func (SecSrv *SecurityService) GetRole(roleId int64) (*Role, error) {
+func (SecSrv *SecurityService) GetRoleById(roleId int64) (*Role, error) {
 	roleOut := Role{}
 	err := SecSrv.DB.QueryRow(
 		"SELECT id, role_name, access_level FROM public.roles WHERE id = $1", roleId,

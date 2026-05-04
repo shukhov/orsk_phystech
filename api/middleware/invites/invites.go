@@ -18,30 +18,17 @@ var (
 	IncorrectInviteError         = errors.New("incorrect invite")
 	InviteNotFoundError          = errors.New("invite not found")
 	TypeOfVPNIsUnknownOrNotFound = errors.New("type of vpn is unknown or not found")
+	secret                       = []byte(os.Getenv("SECRET_KEY"))
+	InvSrv                       = NewInviteService()
 )
-
-var secret = []byte(os.Getenv("SECRET_KEY"))
 
 type InviteService struct {
 	DB     *sql.DB
 	logger *log.Logger
 }
 
-func NewInviteService() *InviteService {
-	invSvc := new(InviteService)
-	invSvc.logger = log.New(os.Stdout, "XrayService: ", log.LstdFlags|log.Lshortfile)
-	db, err := database.GetDB()
-	if err != nil {
-		panic(err)
-	}
-	invSvc.DB = db
-	return invSvc
-}
-
 type InviteOut struct {
 	Id int64 `json:"id"`
-
-	InviteHash string `json:"invite_hash"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -58,7 +45,7 @@ type InviteIn struct {
 }
 
 type InviteActivateIn struct {
-	UserId     int64  `json:"user_id"`
+	UserId     int64  `json:"user_id,omitempty"`
 	InviteWord string `json:"invite_word"`
 	Alias      string `json:"alias"`
 }
@@ -75,12 +62,23 @@ func KeyLookupHash(key string, pepper []byte) string {
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
+func NewInviteService() *InviteService {
+	invSvc := new(InviteService)
+	invSvc.logger = log.New(os.Stdout, "XrayService: ", log.LstdFlags|log.Lshortfile)
+	db, err := database.GetDB()
+	if err != nil {
+		panic(err)
+	}
+	invSvc.DB = db
+	return invSvc
+}
+
 func (invSvc *InviteService) NewInvite(inviteIn *InviteIn) (*InviteOut, error) {
 	hash := KeyLookupHash(inviteIn.InviteWord, secret)
 	inviteOut := new(InviteOut)
 	err := invSvc.DB.QueryRow(
 		NewInviteQuery, hash, inviteIn.VPNType, inviteIn.ExpiresAt).Scan(
-		&inviteOut.Id, &inviteOut.InviteHash, &inviteOut.CreatedAt, &inviteOut.UpdatedAt,
+		&inviteOut.Id, &inviteOut.CreatedAt, &inviteOut.UpdatedAt,
 		&inviteOut.ExpiresAt, &inviteOut.Status, &inviteOut.VPNType)
 	if err != nil {
 		invSvc.logger.Printf("%#v", err)
@@ -98,7 +96,6 @@ func (invSvc *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*I
 	}
 	var vpnType string
 	var inviteId int64
-	defer func() { _ = tx.Commit() }()
 
 	err = tx.QueryRow(GetInviteInfoQuery, KeyLookupHash(inviteCheckIn.InviteWord, secret)).Scan(
 		&inviteId, &vpnType)
@@ -123,7 +120,7 @@ func (invSvc *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*I
 		}
 		newClient, err := xray.XraySrv.NewClient(&newVLESSClient, tx)
 		if err != nil {
-			return nil, IncorrectInviteError
+			return nil, err
 		}
 		inviteCheckOut.Id = newClient.Id
 		inviteCheckOut.Alias = newClient.Alias
@@ -140,5 +137,6 @@ func (invSvc *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*I
 			return nil, IncorrectInviteError
 		}
 	}
+	func() { _ = tx.Commit(); invSvc.logger.Println("trx commited") }()
 	return &inviteCheckOut, nil
 }

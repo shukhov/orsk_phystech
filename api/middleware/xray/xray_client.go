@@ -95,7 +95,7 @@ func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.
 		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
 		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
-		func() { _ = externalTx.Rollback() }()
+		xraySrv.logger.Printf("%#v", err)
 		return nil, ErrorClientCreateBad
 	}
 	return &clientOut, nil

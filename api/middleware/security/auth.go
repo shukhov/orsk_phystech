@@ -40,7 +40,7 @@ type AuthToken struct {
 func generateToken(userId int64) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userId,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Срок действия — 24 часа
+		"exp":     time.Now().Add(time.Hour * 24 * 30).Unix(), // Срок действия — месяц
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
