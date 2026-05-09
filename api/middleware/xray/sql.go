@@ -14,7 +14,7 @@ var (
 	GetClientByIdQuery = `
 	SELECT 
 	    id, 
-	    access_id, 
+	    access_key, 
 	    user_id, 
 	    invite_id, 
 	    alias,
@@ -25,7 +25,7 @@ var (
 
 	GetAllInConfigClientsQuery = `
 	SELECT 
-	    vc.access_id AS id, 
+	    vc.access_key AS id, 
 	    'xtls-rprx-vision' AS flow 
 	FROM public.vless_clients AS vc
 	JOIN public.users AS us
@@ -38,5 +38,11 @@ var (
 	INSERT INTO public.vless_clients (invite_id, user_id, alias)
 	VALUES ($1, $2, $3)
 	RETURNING id, alias, status, created_at, updated_at
+	`
+
+	GetXrayLinkByIdQuery = `
+	SELECT access_key
+	FROM public.vless_clients
+	WHERE id = $1 AND user_id = $2
 	`
 )

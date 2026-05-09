@@ -2,6 +2,7 @@ package xray
 
 import (
 	"api/database"
+	"api/middleware/security"
 	"context"
 	"database/sql"
 	"errors"
@@ -23,9 +24,9 @@ type ClientPublicOut struct {
 
 type ClientPrivateOut struct {
 	ClientPublicOut
-	AccessId string `json:"access_id"`
-	UserId   int64  `json:"user_id"`
-	InviteId int64  `json:"invite_id"`
+	AccessKey string `json:"access_key"`
+	UserId    int64  `json:"user_id"`
+	InviteId  int64  `json:"invite_id"`
 }
 
 type NewClientIn struct {
@@ -37,7 +38,7 @@ type NewClientIn struct {
 func (xraySrv *XrayService) GetClientById(clientId int64) (*ClientPrivateOut, error) {
 	clientOut := new(ClientPrivateOut)
 	err := xraySrv.DB.QueryRow(GetClientByIdQuery, clientId).Scan(
-		&clientOut.Id, &clientOut.AccessId, &clientOut.UserId,
+		&clientOut.Id, &clientOut.AccessKey, &clientOut.UserId,
 		&clientOut.InviteId, &clientOut.InviteId, &clientOut.Alias,
 		clientOut.Status, &clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
@@ -53,17 +54,17 @@ func (xraySrv *XrayService) GetClientById(clientId int64) (*ClientPrivateOut, er
 }
 
 func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut, error) {
+	_, err := security.SecSrv.GetUserById(userId)
+	if err != nil {
+		return nil, security.UserNotFound
+	}
+
 	clientList := make([]ClientPublicOut, 0, 3)
 
 	queryResult, err := xraySrv.DB.Query(GetClientsByUserIdQuery, userId)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrorClientNotFound
-		default:
-			xraySrv.logger.Printf("error %#v", err)
-			return nil, database.InternalDBError
-		}
+		xraySrv.logger.Printf("error %#v", err)
+		return nil, database.InternalDBError
 	}
 	for queryResult.Next() {
 		client := ClientPublicOut{}
@@ -80,14 +81,15 @@ func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut
 }
 
 func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.Tx) (*ClientPublicOut, error) {
+	var isExternalTx = true
 	if externalTx == nil {
 		var err error
 		externalTx, err = xraySrv.DB.BeginTx(context.Background(), nil)
-		defer func() { _ = externalTx.Commit() }()
 		if err != nil {
 			func() { _ = externalTx.Rollback() }()
 			return nil, database.InternalDBError
 		}
+		isExternalTx = false
 	}
 	clientOut := ClientPublicOut{}
 	err := externalTx.QueryRow(
@@ -97,6 +99,12 @@ func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.
 	if err != nil {
 		xraySrv.logger.Printf("%#v", err)
 		return nil, ErrorClientCreateBad
+	}
+	if !isExternalTx {
+		err = externalTx.Commit()
+		if err != nil {
+			return nil, database.InternalDBError
+		}
 	}
 	return &clientOut, nil
 }

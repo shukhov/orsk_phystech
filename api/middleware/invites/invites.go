@@ -73,25 +73,25 @@ func NewInviteService() *InviteService {
 	return invSvc
 }
 
-func (invSvc *InviteService) NewInvite(inviteIn *InviteIn) (*InviteOut, error) {
+func (invSrv *InviteService) NewInvite(inviteIn *InviteIn) (*InviteOut, error) {
 	hash := KeyLookupHash(inviteIn.InviteWord, secret)
 	inviteOut := new(InviteOut)
-	err := invSvc.DB.QueryRow(
+	err := invSrv.DB.QueryRow(
 		NewInviteQuery, hash, inviteIn.VPNType, inviteIn.ExpiresAt).Scan(
 		&inviteOut.Id, &inviteOut.CreatedAt, &inviteOut.UpdatedAt,
 		&inviteOut.ExpiresAt, &inviteOut.Status, &inviteOut.VPNType)
 	if err != nil {
-		invSvc.logger.Printf("%#v", err)
+		invSrv.logger.Printf("%#v", err)
 		return nil, IncorrectInviteError
 	}
 	return inviteOut, nil
 }
 
-func (invSvc *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*InviteCheckOut, error) {
+func (invSrv *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*InviteCheckOut, error) {
 	ctx := context.Background()
-	tx, err := invSvc.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	tx, err := invSrv.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
-		invSvc.logger.Println(err)
+		invSrv.logger.Println(err)
 		return nil, database.InternalDBError
 	}
 	var vpnType string
@@ -105,10 +105,9 @@ func (invSvc *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*I
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, InviteNotFoundError
 		default:
-			invSvc.logger.Println(err)
+			invSrv.logger.Println(err)
 			return nil, database.InternalDBError
 		}
-
 	}
 	var inviteCheckOut InviteCheckOut
 	switch vpnType {
@@ -137,6 +136,6 @@ func (invSvc *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*I
 			return nil, IncorrectInviteError
 		}
 	}
-	func() { _ = tx.Commit(); invSvc.logger.Println("trx commited") }()
+	func() { _ = tx.Commit() }()
 	return &inviteCheckOut, nil
 }

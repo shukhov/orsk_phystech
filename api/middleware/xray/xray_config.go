@@ -10,9 +10,20 @@ import (
 	"strings"
 )
 
+type ConnectionParams struct {
+	XrayPort        int32
+	XrayHost        string
+	XrayListen      string
+	XrayDest        string
+	XrayPrivateKey  string
+	XrayServerNames []string
+	XrayShortIds    []string
+}
+
 type XrayService struct {
-	DB     *sql.DB
-	logger *log.Logger
+	DB         *sql.DB
+	ConnParams *ConnectionParams
+	logger     *log.Logger
 }
 
 func NewXrayService() *XrayService {
@@ -23,6 +34,20 @@ func NewXrayService() *XrayService {
 		panic(err)
 	}
 	vlsSvc.DB = db
+	port, err := strconv.ParseInt(os.Getenv("XRAY_PORT"), 10, 32)
+	if err != nil {
+		panic(err)
+	}
+	vlsSvc.ConnParams = &ConnectionParams{
+		XrayPort:        int32(port),
+		XrayHost:        os.Getenv("XRAY_HOST"),
+		XrayListen:      os.Getenv("XRAY_LISTEN"),
+		XrayDest:        os.Getenv("XRAY_DEST"),
+		XrayPrivateKey:  os.Getenv("XRAY_PRIVATE_KEY"),
+		XrayServerNames: strings.Split(os.Getenv("XRAY_SERVER_NAMES"), ","),
+		XrayShortIds:    strings.Split(os.Getenv("XRAY_SHORT_IDS"), ","),
+	}
+
 	return vlsSvc
 }
 
@@ -38,7 +63,7 @@ type LogConfig struct {
 
 type Inbound struct {
 	Listen         string          `json:"listen"`
-	Port           int64           `json:"port"`
+	Port           int32           `json:"port"`
 	Protocol       string          `json:"protocol"`
 	Settings       InboundSettings `json:"settings"`
 	StreamSettings StreamSettings  `json:"streamSettings"`
@@ -110,13 +135,12 @@ func (xraySrv *XrayService) GetConfig() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	xrayPort, err := strconv.ParseInt(os.Getenv("XRAY_PORT"), 10, 64)
 	config := Config{
 		Log: LogConfig{Loglevel: "warning"},
 		Inbounds: []Inbound{
 			{
-				Listen:   os.Getenv("XRAY_LISTEN"),
-				Port:     xrayPort,
+				Listen:   xraySrv.ConnParams.XrayListen,
+				Port:     xraySrv.ConnParams.XrayPort,
 				Protocol: "vless",
 				Settings: InboundSettings{
 					Clients:    *inConfigClients,
@@ -127,11 +151,11 @@ func (xraySrv *XrayService) GetConfig() (*Config, error) {
 					Security: "reality",
 					RealitySettings: RealitySettings{
 						Show:        false,
-						Dest:        os.Getenv("XRAY_DEST"),
+						Dest:        xraySrv.ConnParams.XrayDest,
 						Xver:        0,
-						ServerNames: strings.Split(os.Getenv("XRAY_SERVER_NAMES"), ","),
-						PrivateKey:  os.Getenv("XRAY_PRIVATE_KEY"),
-						ShortIds:    strings.Split(os.Getenv("XRAY_SHORT_IDS"), ","),
+						ServerNames: xraySrv.ConnParams.XrayServerNames,
+						PrivateKey:  xraySrv.ConnParams.XrayPrivateKey,
+						ShortIds:    xraySrv.ConnParams.XrayShortIds,
 					},
 				},
 				Sniffing: Sniffing{
