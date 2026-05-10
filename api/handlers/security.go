@@ -20,7 +20,7 @@ func Register(writer http.ResponseWriter, request *http.Request) {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	result, err := security.SecSrv.Create(&regData)
+	result, err := security.SecSrv.CreateUser(&regData)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return

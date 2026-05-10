@@ -22,12 +22,7 @@ func (SecSrv *SecurityService) AllowForRole(roleId int64, handler http.Handler) 
 		ctx := request.Context()
 		userId := GetUserIdFromContext(&ctx)
 		var hasAccess bool
-		err := SecSrv.DB.QueryRow(
-			`SELECT user_role.access_level >= role_req.access_level AS has_access
-					FROM public.users AS usr
-					JOIN public.roles AS user_role ON usr.role_id = user_role.id
-					JOIN public.roles AS role_req ON role_req.id = $1
-					WHERE usr.id = $2;`, roleId, userId).Scan(&hasAccess)
+		err := SecSrv.DB.QueryRow(AllowForRoleQuery, roleId, userId).Scan(&hasAccess)
 		if err != nil {
 			switch {
 			case errors.Is(err, sql.ErrNoRows):
@@ -47,9 +42,7 @@ func (SecSrv *SecurityService) AllowForRole(roleId int64, handler http.Handler) 
 
 func (SecSrv *SecurityService) SetRoleForUser(userId int64, roleId int64) (*UserPrivateOut, error) {
 	userOut := UserPrivateOut{}
-	err := SecSrv.DB.QueryRow(
-		"UPDATE public.users SET role_id=$1, updated_at=now() WHERE id = $2 "+
-			"RETURNING id, created_at, updated_at, username, email, status, role_id;", roleId, userId).Scan(
+	err := SecSrv.DB.QueryRow(SetRoleForUserQuery, roleId, userId).Scan(
 		&userOut.Id, &userOut.CreatedAt, &userOut.UpdatedAt, &userOut.Username,
 		&userOut.Email, &userOut.Status, &userOut.RoleId)
 	if err != nil {
@@ -66,9 +59,7 @@ func (SecSrv *SecurityService) SetRoleForUser(userId int64, roleId int64) (*User
 
 func (SecSrv *SecurityService) GetRoleById(roleId int64) (*Role, error) {
 	roleOut := Role{}
-	err := SecSrv.DB.QueryRow(
-		"SELECT id, role_name, access_level FROM public.roles WHERE id = $1", roleId,
-	).Scan(roleOut.Id, roleOut.RoleName, roleOut.AccessLevel)
+	err := SecSrv.DB.QueryRow(GetRoleByIdQuery, roleId).Scan(roleOut.Id, roleOut.RoleName, roleOut.AccessLevel)
 	if err != nil {
 		fmt.Println(err)
 		switch {

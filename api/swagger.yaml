@@ -1,0 +1,276 @@
+swagger: '2.0'
+info:
+  title: API for VPN Server
+  version: 1.0.0
+  description: API for managing users, roles, and XRay configurations.
+host: localhost:8080
+basePath: /api/v1
+schemes:
+  - http
+  - https
+paths:
+  /security/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Security
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserLoginIn'
+      responses:
+        '200':
+          description: Successful registration
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+  /security/login:
+    post:
+      summary: Login and get a JWT token
+      tags:
+        - Security
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserLoginIn'
+      responses:
+        '200':
+          description: Successful login
+          schema:
+            $ref: '#/definitions/AuthToken'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+  /security/me:
+    get:
+      summary: Get the current authenticated user's information
+      tags:
+        - Security
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns the user's information
+        '401':
+          description: Missing or invalid token
+        '500':
+          description: Internal server error
+  /security/users/{user_id}:
+    get:
+      summary: Get a user by ID
+      tags:
+        - Security
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the user's information
+        '401':
+          description: Missing or invalid token
+        '500':
+          description: Internal server error
+  /security/users/{user_id}/set_role/{role_id}:
+    post:
+      summary: Set a role for a user
+      tags:
+        - Security
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          type: integer
+          format: int64
+        - in: path
+          name: role_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns a success message
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+        '500':
+          description: Internal server error
+  /security/roles/{role_id}:
+    get:
+      summary: Get a role by ID
+      tags:
+        - Security
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: role_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the role's information
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+        '500':
+          description: Internal server error
+  /xray/config:
+    get:
+      summary: Get the XRay configuration
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns the XRay configuration
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+        '500':
+          description: Internal server error
+  /xray/clients/by_user_id/{user_id}:
+    get:
+      summary: Get clients by user ID
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the clients' information
+        '401':
+          description: Missing or invalid token
+        '500':
+          description: Internal server error
+  /xray/clients/{client_id}:
+    get:
+      summary: Get a client by ID
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Returns the client's information
+        '401':
+          description: Missing or invalid token
+        '500':
+          description: Internal server error
+  /xray/clients/link/{client_id}:
+    get:
+      summary: Get an XRay link by client ID
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Returns the XRay link
+        '401':
+          description: Missing or invalid token
+        '500':
+          description: Internal server error
+  /invite/new:
+    post:
+      summary: Create a new invite
+      tags:
+        - Invite
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns the new invite
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+        '500':
+          description: Internal server error
+  /invite/activate:
+    post:
+      summary: Activate an invite
+      tags:
+        - Invite
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns a success message
+        '401':
+          description: Missing or invalid token
+        '500':
+          description: Internal server error
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+definitions:
+  UserLoginIn:
+    type: object
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+  AuthToken:
+    type: object
+    properties:
+      token:
+        type: string

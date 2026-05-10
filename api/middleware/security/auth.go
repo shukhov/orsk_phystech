@@ -89,9 +89,7 @@ func (SecSrv *SecurityService) RequireAuth(handler http.Handler) http.Handler {
 func (SecSrv *SecurityService) Login(userIn *UserLoginIn) (string, error) {
 	var hash string
 	var id int64
-	err := SecSrv.DB.QueryRow(
-		"SELECT id, password_hash FROM public.users WHERE email = $1", userIn.Email,
-	).Scan(&id, &hash)
+	err := SecSrv.DB.QueryRow(LoginQuery, userIn.Email).Scan(&id, &hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", IncorrectLoginOrPassword

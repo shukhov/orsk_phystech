@@ -25,8 +25,7 @@ var SecSrv = NewSecurityService()
 
 func (SecSrv *SecurityService) GetUserById(userId int64) (*UserPublicOut, error) {
 	userOut := UserPublicOut{}
-	err := SecSrv.DB.QueryRow("SELECT id, created_at, updated_at, status "+
-		"FROM public.users WHERE id = $1", userId).Scan(
+	err := SecSrv.DB.QueryRow(GetUserByIdQuery, userId).Scan(
 		&userOut.Id, &userOut.CreatedAt, &userOut.UpdatedAt, &userOut.Username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -39,9 +38,7 @@ func (SecSrv *SecurityService) GetUserById(userId int64) (*UserPublicOut, error)
 
 func (SecSrv *SecurityService) Me(userId int64) (*UserPrivateOut, error) {
 	userOut := UserPrivateOut{}
-	err := SecSrv.DB.QueryRow(
-		"SELECT id, created_at, updated_at, username, email, status, role_id "+
-			"FROM public.users WHERE id = $1", userId).Scan(
+	err := SecSrv.DB.QueryRow(MeQuery, userId).Scan(
 		&userOut.Id, &userOut.CreatedAt, &userOut.UpdatedAt, &userOut.Username,
 		&userOut.Email, &userOut.Status, &userOut.RoleId)
 	if err != nil {

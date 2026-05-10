@@ -67,7 +67,7 @@ func validateEmail(email string) bool {
 	return emailRe.MatchString(email)
 }
 
-func (SecSrv *SecurityService) Create(userIn *UserRegisterIn) (*UserPublicOut, error) {
+func (SecSrv *SecurityService) CreateUser(userIn *UserRegisterIn) (*UserPublicOut, error) {
 	if !validateUsername(userIn.Username) {
 		return nil, InvalidUsername
 	}
@@ -82,12 +82,7 @@ func (SecSrv *SecurityService) Create(userIn *UserRegisterIn) (*UserPublicOut, e
 		return nil, err
 	}
 	out := UserPublicOut{}
-	err = SecSrv.DB.QueryRow(
-		`INSERT INTO public.users (username, password_hash, email)
-			VALUES ($1, $2, $3)
-			RETURNING id, username, created_at, updated_at;`,
-		userIn.Username, hash, userIn.Email,
-	).Scan(&out.Id, &out.Username, &out.CreatedAt, &out.UpdatedAt)
+	err = SecSrv.DB.QueryRow(CreateUserQuery, userIn.Username, hash, userIn.Email).Scan(&out.Id, &out.Username, &out.CreatedAt, &out.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %#v", err)
 	}

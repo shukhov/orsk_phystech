@@ -41,7 +41,7 @@ var (
 	`
 
 	GetXrayLinkByIdQuery = `
-	SELECT access_key
+	SELECT access_key, alias
 	FROM public.vless_clients
 	WHERE id = $1 AND user_id = $2
 	`

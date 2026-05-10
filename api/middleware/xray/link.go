@@ -14,6 +14,11 @@ type ConnectionLinkOut struct {
 	ConnectionLink string `json:"connection_link"`
 }
 
+type ConnectionAccessOut struct {
+	AccessKey string
+	Alias     string
+}
+
 type Params struct {
 	UUID string
 	Host string
@@ -27,9 +32,9 @@ type Params struct {
 }
 
 func (xraySrv *XrayService) xrayPrivateToPublicBase64(privB64 string) (string, error) {
-	priv, err := base64.StdEncoding.DecodeString(privB64)
+	priv, err := base64.RawURLEncoding.DecodeString(privB64)
 	if err != nil {
-		xraySrv.logger.Printf("base64 decode private key: %#v", err)
+		xraySrv.logger.Printf("base64url decode private key: %v", err)
 		return "", database.InternalDBError
 	}
 	if len(priv) != 32 {
@@ -39,19 +44,20 @@ func (xraySrv *XrayService) xrayPrivateToPublicBase64(privB64 string) (string, e
 
 	pub, err := curve25519.X25519(priv, curve25519.Basepoint)
 	if err != nil {
-		xraySrv.logger.Printf("x25519 derive public key: %#v", err)
+		xraySrv.logger.Printf("x25519 derive public key: %v", err)
 		return "", database.InternalDBError
 	}
-	return base64.StdEncoding.EncodeToString(pub), nil
+
+	return base64.RawURLEncoding.EncodeToString(pub), nil
 }
 
-func (xraySrv *XrayService) makeXrayLinkParams(UUID string) (*Params, error) {
+func (xraySrv *XrayService) makeXrayLinkParams(connAccess *ConnectionAccessOut) (*Params, error) {
 	pubKey, err := xraySrv.xrayPrivateToPublicBase64(os.Getenv("XRAY_PRIVATE_KEY"))
 	if err != nil {
 		return nil, err
 	}
 	params := Params{
-		UUID: UUID,
+		UUID: connAccess.AccessKey,
 		Host: xraySrv.ConnParams.XrayHost,
 		Port: xraySrv.ConnParams.XrayPort,
 		PBK:  pubKey,
@@ -59,7 +65,7 @@ func (xraySrv *XrayService) makeXrayLinkParams(UUID string) (*Params, error) {
 		SID:  xraySrv.ConnParams.XrayShortIds[rand.Intn(len(xraySrv.ConnParams.XrayShortIds))],
 		FP:   "chrome",
 		Flow: "xtls-rprx-vision",
-		Name: "xray-reality",
+		Name: connAccess.Alias,
 	}
 	return &params, nil
 }
@@ -77,18 +83,18 @@ func (xraySrv *XrayService) link(p *Params) string {
 	}
 
 	frag := url.PathEscape(p.Name)
-	return fmt.Sprintf("xray://%s@%s:%d?%s#%s",
+	return fmt.Sprintf("vless://%s@%s:%d?%s#%s",
 		p.UUID, p.Host, p.Port, q.Encode(), frag,
 	)
 }
 
 func (xraySrv *XrayService) GetXrayLinkById(clientId int64, userId int64) (*ConnectionLinkOut, error) {
-	var accessKey string
-	err := xraySrv.DB.QueryRow(GetXrayLinkByIdQuery, clientId, userId).Scan(&accessKey)
+	connAccess := ConnectionAccessOut{}
+	err := xraySrv.DB.QueryRow(GetXrayLinkByIdQuery, clientId, userId).Scan(&connAccess.AccessKey, &connAccess.Alias)
 	if err != nil {
 		return nil, ErrorClientNotFound
 	}
-	params, err := xraySrv.makeXrayLinkParams(accessKey)
+	params, err := xraySrv.makeXrayLinkParams(&connAccess)
 	if err != nil {
 		return nil, err
 	}

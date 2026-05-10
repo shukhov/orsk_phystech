@@ -88,7 +88,7 @@ func GetXrayLinkById(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
-	utils.WriteJSON(writer, http.StatusOK, link)
+	utils.WriteJSON(writer, http.StatusOK, *link)
 	return
 
 }
