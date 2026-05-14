@@ -23,14 +23,20 @@ paths:
           name: body
           required: true
           schema:
-            $ref: '#/definitions/UserLoginIn'
+            $ref: '#/definitions/UserRegisterIn'
       responses:
-        '200':
+        '201':
           description: Successful registration
+          schema:
+            $ref: '#/definitions/UserPublicOut'
         '400':
           description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /security/login:
     post:
       summary: Login and get a JWT token
@@ -47,16 +53,22 @@ paths:
           schema:
             $ref: '#/definitions/UserLoginIn'
       responses:
-        '200':
+        '201':
           description: Successful login
           schema:
             $ref: '#/definitions/AuthToken'
         '400':
           description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '401':
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /security/me:
     get:
       summary: Get the current authenticated user's information
@@ -69,10 +81,20 @@ paths:
       responses:
         '200':
           description: Returns the user's information
+          schema:
+            $ref: '#/definitions/UserPrivateOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /security/users/{user_id}:
     get:
       summary: Get a user by ID
@@ -91,10 +113,20 @@ paths:
       responses:
         '200':
           description: Returns the user's information
+          schema:
+            $ref: '#/definitions/UserPublicOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /security/users/{user_id}/set_role/{role_id}:
     post:
       summary: Set a role for a user
@@ -117,11 +149,21 @@ paths:
           format: int64
       responses:
         '200':
-          description: Returns a success message
+          description: Returns the updated user's information
+          schema:
+            $ref: '#/definitions/UserPrivateOut'
         '401':
           description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /security/roles/{role_id}:
     get:
       summary: Get a role by ID
@@ -140,10 +182,16 @@ paths:
       responses:
         '200':
           description: Returns the role's information
+          schema:
+            $ref: '#/definitions/Role'
         '401':
           description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /xray/config:
     get:
       summary: Get the XRay configuration
@@ -156,10 +204,16 @@ paths:
       responses:
         '200':
           description: Returns the XRay configuration
+          schema:
+            $ref: '#/definitions/Config'
         '401':
           description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /xray/clients/by_user_id/{user_id}:
     get:
       summary: Get clients by user ID
@@ -178,10 +232,18 @@ paths:
       responses:
         '200':
           description: Returns the clients' information
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ClientPublicOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /xray/clients/{client_id}:
     get:
       summary: Get a client by ID
@@ -199,10 +261,16 @@ paths:
       responses:
         '200':
           description: Returns the client's information
+          schema:
+            $ref: '#/definitions/ClientPrivateOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /xray/clients/link/{client_id}:
     get:
       summary: Get an XRay link by client ID
@@ -220,10 +288,16 @@ paths:
       responses:
         '200':
           description: Returns the XRay link
+          schema:
+            $ref: '#/definitions/ConnectionLinkOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /invite/new:
     post:
       summary: Create a new invite
@@ -231,15 +305,29 @@ paths:
         - Invite
       security:
         - Bearer: []
+      consumes:
+        - application/json
       produces:
         - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/InviteIn'
       responses:
-        '200':
+        '201':
           description: Returns the new invite
+          schema:
+            $ref: '#/definitions/InviteOut'
         '401':
           description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /invite/activate:
     post:
       summary: Activate an invite
@@ -247,30 +335,286 @@ paths:
         - Invite
       security:
         - Bearer: []
+      consumes:
+        - application/json
       produces:
         - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/InviteActivateIn'
       responses:
         '200':
-          description: Returns a success message
+          description: Returns the activated invite info
+          schema:
+            $ref: '#/definitions/InviteCheckOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
         '500':
           description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
 securityDefinitions:
   Bearer:
     type: apiKey
     name: Authorization
     in: header
 definitions:
+  ErrorCallback:
+    type: object
+    properties:
+      error_text:
+        type: string
   UserLoginIn:
     type: object
+    required:
+      - email
+      - password
     properties:
       email:
         type: string
       password:
         type: string
+  UserRegisterIn:
+    type: object
+    required:
+      - email
+      - password
+      - username
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
   AuthToken:
     type: object
     properties:
       token:
+        type: string
+  UserPublicOut:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      username:
+        type: string
+  UserPrivateOut:
+    type: object
+    allOf:
+      - $ref: '#/definitions/UserPublicOut'
+      - type: object
+        properties:
+          email:
+            type: string
+          status:
+            type: string
+          role_id:
+            type: integer
+            format: int64
+  Role:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      role_name:
+        type: string
+      access_level:
+        type: integer
+        format: int64
+  LogConfig:
+    type: object
+    properties:
+      loglevel:
+        type: string
+  InConfigClient:
+    type: object
+    properties:
+      id:
+        type: string
+      flow:
+        type: string
+  RealitySettings:
+    type: object
+    properties:
+      show:
+        type: boolean
+      dest:
+        type: string
+      xver:
+        type: integer
+        format: int64
+      serverNames:
+        type: array
+        items:
+          type: string
+      privateKey:
+        type: string
+      shortIds:
+        type: array
+        items:
+          type: string
+  Sniffing:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      destOverride:
+        type: array
+        items:
+          type: string
+  InboundSettings:
+    type: object
+    properties:
+      clients:
+        type: array
+        items:
+          $ref: '#/definitions/InConfigClient'
+      decryption:
+        type: string
+  StreamSettings:
+    type: object
+    properties:
+      network:
+        type: string
+      security:
+        type: string
+      realitySettings:
+        $ref: '#/definitions/RealitySettings'
+  Inbound:
+    type: object
+    properties:
+      listen:
+        type: string
+      port:
+        type: integer
+        format: int32
+      protocol:
+        type: string
+      settings:
+        $ref: '#/definitions/InboundSettings'
+      streamSettings:
+        $ref: '#/definitions/StreamSettings'
+      sniffing:
+        $ref: '#/definitions/Sniffing'
+  Outbound:
+    type: object
+    properties:
+      protocol:
+        type: string
+  Config:
+    type: object
+    properties:
+      log:
+        $ref: '#/definitions/LogConfig'
+      inbounds:
+        type: array
+        items:
+          $ref: '#/definitions/Inbound'
+      outbounds:
+        type: array
+        items:
+          $ref: '#/definitions/Outbound'
+  ClientPublicOut:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      alias:
+        type: string
+      status:
+        type: string
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  ClientPrivateOut:
+    type: object
+    allOf:
+      - $ref: '#/definitions/ClientPublicOut'
+      - type: object
+        properties:
+          access_key:
+            type: string
+          user_id:
+            type: integer
+            format: int64
+          invite_id:
+            type: integer
+            format: int64
+  ConnectionLinkOut:
+    type: object
+    properties:
+      connection_link:
+        type: string
+  InviteIn:
+    type: object
+    required:
+      - invite_word
+      - vpn_type
+    properties:
+      invite_word:
+        type: string
+      vpn_type:
+        type: string
+      expires_at:
+        type: string
+        format: date-time
+  InviteActivateIn:
+    type: object
+    required:
+      - invite_word
+      - alias
+    properties:
+      user_id:
+        type: integer
+        format: int64
+      invite_word:
+        type: string
+      alias:
+        type: string
+  InviteOut:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      expires_at:
+        type: string
+        format: date-time
+      status:
+        type: string
+      vpn_type:
+        type: string
+  InviteCheckOut:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      alias:
+        type: string
+      vpn_type:
         type: string

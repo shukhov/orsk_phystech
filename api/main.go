@@ -16,7 +16,7 @@ func main() {
 	mux.Handle("POST /api/v1/security/users/{user_id}/set_role/{role_id}",
 		handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(5, http.HandlerFunc(handlers.SetRoleForUser))))
 	mux.Handle("GET /api/v1/security/roles/{role_id}",
-		handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.SetRoleForUser))))
+		handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetRoleById))))
 
 	// XRay Service
 	mux.Handle("GET /api/v1/xray/config", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetConfig))))
