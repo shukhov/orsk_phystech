@@ -56,6 +56,15 @@ services:
     ports:
       - "8080:8080"
 
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_started
+
   #xray:
   #  build: ./xray
   #  restart: unless-stopped
@@ -76,4 +85,4 @@ services:
 volumes:
   pg_data: {}
   xray_state: {}
- # xray_etc: {}#
+  # xray_etc: {}

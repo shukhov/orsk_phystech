@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS public.invites (
 CREATE TABLE IF NOT EXISTS public.vless_clients (
     id         BIGSERIAL PRIMARY KEY,
     access_key  UUID DEFAULT gen_random_uuid(),
-    user_id    BIGINT NOT NULL REFERENCES public.users(id),
-    invite_id  BIGINT NOT NULL UNIQUE REFERENCES public.invites(id),
+    user_id    BIGINT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    invite_id  BIGINT NOT NULL UNIQUE REFERENCES public.invites(id) ON DELETE CASCADE,
 
     alias      TEXT NOT NULL,
 

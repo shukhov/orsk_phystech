@@ -3,6 +3,7 @@ package handlers
 import (
 	"api/database"
 	"api/middleware/invites"
+	"api/middleware/security"
 	"api/middleware/utils"
 	"errors"
 	"net/http"
@@ -30,6 +31,11 @@ func ActivateInvite(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
+	}
+	// Если user_id не передан — активируем для текущего пользователя
+	if inviteActivateIn.UserId == 0 {
+		ctx := request.Context()
+		inviteActivateIn.UserId = security.GetUserIdFromContext(&ctx)
 	}
 	inviteCheckOut, err := invites.InvSrv.ActivateInvite(&inviteActivateIn)
 	if err != nil {

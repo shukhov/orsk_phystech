@@ -39,8 +39,8 @@ func (xraySrv *XrayService) GetClientById(clientId int64) (*ClientPrivateOut, er
 	clientOut := new(ClientPrivateOut)
 	err := xraySrv.DB.QueryRow(GetClientByIdQuery, clientId).Scan(
 		&clientOut.Id, &clientOut.AccessKey, &clientOut.UserId,
-		&clientOut.InviteId, &clientOut.InviteId, &clientOut.Alias,
-		clientOut.Status, &clientOut.CreatedAt, &clientOut.UpdatedAt)
+		&clientOut.InviteId, &clientOut.Alias, &clientOut.Status,
+		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -69,7 +69,7 @@ func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut
 	for queryResult.Next() {
 		client := ClientPublicOut{}
 		err = queryResult.Scan(
-			&client.Id, &client.Alias, client.Status,
+			&client.Id, &client.Alias, &client.Status,
 			&client.CreatedAt, &client.UpdatedAt)
 		if err != nil {
 			xraySrv.logger.Printf("error %#v", err)
