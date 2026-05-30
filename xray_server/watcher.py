@@ -270,13 +270,15 @@ def validate_config_file(path: str) -> None:
 def write_config_atomically(config: dict[str, Any]) -> bool:
     """
     Пишет конфиг атомарно:
-    1. config.json.tmp
+    1. .config.json.tmp.json
     2. validate tmp
     3. replace config.json
 
     Возвращает True, если файл реально изменился.
     """
     config_dir = os.path.dirname(XRAY_CONFIG_PATH)
+    config_base = os.path.basename(XRAY_CONFIG_PATH)
+
     if config_dir:
         os.makedirs(config_dir, exist_ok=True)
 
@@ -291,7 +293,7 @@ def write_config_atomically(config: dict[str, Any]) -> bool:
         log.info("Config content is unchanged, skipping write")
         return False
 
-    tmp_path = XRAY_CONFIG_PATH + ".tmp"
+    tmp_path = os.path.join(config_dir, "." + config_base + ".tmp.json")
 
     with open(tmp_path, "w", encoding="utf-8") as f:
         f.write(new_content)
