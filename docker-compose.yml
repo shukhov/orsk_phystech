@@ -98,7 +98,7 @@ services:
       XRAY_CONFIG_PATH: ${WATCHER_XRAY_CONFIG_PATH}
       LOGIN_ENDPOINT: /api/v1/security/login
       LAST_UPDATE_ENDPOINT: /api/v1/xray/last-update
-      CONFIG_ENDPOINT: api/v1/xray/config
+      CONFIG_ENDPOINT: /api/v1/xray/config
       RESTART_COMMAND: sh -c 'test -f /tmp/xray.pid && kill $$(cat /tmp/xray.pid) || true'
     volumes:
       - xray_etc:/etc/xray
