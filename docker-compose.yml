@@ -96,6 +96,7 @@ services:
       WATCHER_POLL_INTERVAL: ${WATCHER_POLL_INTERVAL}
       THRESHOLD_MINUTES: ${WATCHER_THRESHOLD_MINUTES}
       XRAY_CONFIG_PATH: ${WATCHER_XRAY_CONFIG_PATH}
+      LOGIN_ENDPOINT: /security/login
       RESTART_COMMAND: sh -c 'test -f /tmp/xray.pid && kill $$(cat /tmp/xray.pid) || true'
     volumes:
       - xray_etc:/etc/xray
