@@ -96,7 +96,7 @@ services:
       POLL_INTERVAL: ${WATCHER_POLL_INTERVAL}
       THRESHOLD_MINUTES: ${WATCHER_THRESHOLD_MINUTES}
       XRAY_CONFIG_PATH: ${WATCHER_XRAY_CONFIG_PATH}
-      RESTART_COMMAND: kill $$(cat /tmp/xray.pid)
+      RESTART_COMMAND: sh -c 'test -f /tmp/xray.pid && kill $$(cat /tmp/xray.pid) || true'
     volumes:
       - xray_etc:/etc/xray
     depends_on:
