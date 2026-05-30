@@ -16,7 +16,7 @@ import requests
 # Environment
 # ----------------------------
 
-API_URL = os.getenv("API_URL", "").rstrip("/")
+API_URL = os.getenv("WATCHER_API_URL", "").rstrip("/")
 
 LOGIN_EMAIL = os.getenv("WATCHER_EMAIL", "")
 LOGIN_PASSWORD = os.getenv("WATCHER_PASSWORD", "")
