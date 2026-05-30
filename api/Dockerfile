@@ -18,7 +18,7 @@ RUN apk add --no-cache ca-certificates
 
 COPY --from=build /out/app /app/app
 
-EXPOSE 8080
-ENV ADDR=:8080
+EXPOSE 8081
+ENV ADDR=:8081
 
 CMD ["/app/app"]

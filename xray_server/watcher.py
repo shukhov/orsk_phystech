@@ -25,7 +25,7 @@ logging.basicConfig(
 log = logging.getLogger('watcher')
 
 # --- Переменные окружения ---
-API_URL = os.environ.get('API_URL', 'http://api:8080')
+API_URL = os.environ.get('API_URL', 'http://api:8081')
 LOGIN_EMAIL = os.environ.get('LOGIN_EMAIL', '')
 LOGIN_PASSWORD = os.environ.get('LOGIN_PASSWORD', '')
 POLL_INTERVAL = int(os.environ.get('POLL_INTERVAL', '60'))       # секунд

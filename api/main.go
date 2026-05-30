@@ -31,7 +31,7 @@ func main() {
 	mux.Handle("POST /api/v1/invite/activate", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.ActivateInvite)))
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8081",
 		Handler: withRecover(mux),
 	}
 

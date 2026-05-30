@@ -3,7 +3,7 @@ info:
   title: API for VPN Server
   version: 1.0.0
   description: API for managing users, roles, and XRay configurations.
-host: localhost:8080
+host: localhost:8081
 basePath: /api/v1
 schemes:
   - http
