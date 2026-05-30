@@ -88,7 +88,7 @@ services:
     build: ./xray_server
     restart: unless-stopped
     ports:
-      - "543:543"
+      - "543:543/tcp"
     environment:
       API_URL: ${WATCHER_API_URL}
       LOGIN_EMAIL: ${WATCHER_EMAIL}
