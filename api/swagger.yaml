@@ -214,6 +214,32 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/ErrorCallback'
+  /xray/last_update:
+    get:
+      summary: Get the last update timestamp of VLESS clients
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns the last update timestamp
+          schema:
+            $ref: '#/definitions/LastUpdateOut'
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: No clients found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /xray/clients/by_user_id/{user_id}:
     get:
       summary: Get clients by user ID
@@ -558,6 +584,12 @@ definitions:
           invite_id:
             type: integer
             format: int64
+  LastUpdateOut:
+    type: object
+    properties:
+      updated_at:
+        type: string
+        format: date-time
   ConnectionLinkOut:
     type: object
     properties:

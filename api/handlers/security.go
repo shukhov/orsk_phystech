@@ -32,7 +32,6 @@ func Register(writer http.ResponseWriter, request *http.Request) {
 func Login(writer http.ResponseWriter, request *http.Request) {
 	loginData := security.UserLoginIn{}
 	err := utils.ReadJSON(request, &loginData)
-	fmt.Println(err, loginData)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err})
 		return

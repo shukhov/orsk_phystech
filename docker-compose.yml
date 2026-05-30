@@ -31,6 +31,25 @@ services:
       "
     restart: "no"
 
+  init_profiles:
+    build: ./orsk_phystech/init_profiles
+    restart: "no"
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: vpn_db
+      DB_USER: vpn_api
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      WATCHER_USERNAME: ${WATCHER_USERNAME}
+      WATCHER_EMAIL: ${WATCHER_EMAIL}
+      WATCHER_PASSWORD: ${WATCHER_PASSWORD}
+      SUPERUSER_USERNAME: ${SUPERUSER_USERNAME}
+      SUPERUSER_EMAIL: ${SUPERUSER_EMAIL}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+    depends_on:
+      db_init:
+        condition: service_completed_successfully
+
   api:
     build: ./api
     restart: unless-stopped
@@ -51,7 +70,7 @@ services:
       XRAY_PRIVATE_KEY: ${XRAY_PRIVATE_KEY}
       XRAY_SHORT_IDS: ${XRAY_SHORT_IDS}
     depends_on:
-      db_init:
+      init_profiles:
         condition: service_completed_successfully
     ports:
       - "8080:8080"
@@ -65,24 +84,26 @@ services:
       api:
         condition: service_started
 
-  #xray:
-  #  build: ./xray
-  #  restart: unless-stopped
-  #  ports:
-  #    - "443:443/tcp"
-  #  environment:
-  #    API_URL: http://api:8080/internal/xray/config
-  #    AUTH_TOKEN: ${XRAY_CONFIG_TOKEN}
-  #    POLL_SECONDS: "15"
-  #    XRAY_CONFIG: /etc/xray/config.json
-  #  volumes:
-  #    - xray_state:/var/lib/xray-watcher
-  #    - xray_etc:/etc/xray
-  #  depends_on:
-  #    api:
-  #      condition: service_started
+  xray_server:
+    build: ./xray_server
+    restart: unless-stopped
+    ports:
+      - "543:543"
+    environment:
+      API_URL: ${WATCHER_API_URL}
+      LOGIN_EMAIL: ${WATCHER_EMAIL}
+      LOGIN_PASSWORD: ${WATCHER_PASSWORD}
+      POLL_INTERVAL: ${WATCHER_POLL_INTERVAL}
+      THRESHOLD_MINUTES: ${WATCHER_THRESHOLD_MINUTES}
+      XRAY_CONFIG_PATH: ${WATCHER_XRAY_CONFIG_PATH}
+      RESTART_COMMAND: ${WATCHER_RESTART_COMMAND}
+    volumes:
+      - xray_etc:/etc/xray
+    depends_on:
+      api:
+        condition: service_started
 
 volumes:
   pg_data: {}
   xray_state: {}
-  # xray_etc: {}
+  xray_etc: {}

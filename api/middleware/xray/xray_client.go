@@ -35,6 +35,10 @@ type NewClientIn struct {
 	Alias    string `json:"alias"`
 }
 
+type LastUpdateOut struct {
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 func (xraySrv *XrayService) GetClientById(clientId int64) (*ClientPrivateOut, error) {
 	clientOut := new(ClientPrivateOut)
 	err := xraySrv.DB.QueryRow(GetClientByIdQuery, clientId).Scan(
@@ -107,4 +111,19 @@ func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.
 		}
 	}
 	return &clientOut, nil
+}
+
+func (xraySrv *XrayService) LastUpdate() (*LastUpdateOut, error) {
+	lastUpdateOut := LastUpdateOut{}
+	err := xraySrv.DB.QueryRow(LastUpdateQuery).Scan(&lastUpdateOut.UpdatedAt)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrorClientNotFound
+		default:
+			xraySrv.logger.Printf("last update error: %#v", err)
+			return nil, database.InternalDBError
+		}
+	}
+	return &lastUpdateOut, nil
 }

@@ -45,4 +45,9 @@ var (
 	FROM public.vless_clients
 	WHERE id = $1 AND user_id = $2
 	`
+
+	LastUpdateQuery = `
+	SELECT MAX(updated_at) AS updated_at
+	FROM public.vless_clients
+	`
 )

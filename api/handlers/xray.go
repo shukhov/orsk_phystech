@@ -90,5 +90,19 @@ func GetXrayLinkById(writer http.ResponseWriter, request *http.Request) {
 	}
 	utils.WriteJSON(writer, http.StatusOK, *link)
 	return
+}
 
+func LastUpdate(writer http.ResponseWriter, request *http.Request) {
+	lu, err := xray.XraySrv.LastUpdate()
+	if err != nil {
+		switch {
+		case errors.Is(err, xray.ErrorClientNotFound):
+			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
+		default:
+			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
+		}
+		return
+	}
+	utils.WriteJSON(writer, http.StatusOK, *lu)
+	return
 }
