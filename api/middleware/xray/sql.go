@@ -47,7 +47,7 @@ var (
 	`
 
 	LastUpdateQuery = `
-	SELECT MAX(updated_at) AS updated_at
+	SELECT COALESCE(MAX(updated_at), '1970-01-01'::timestamptz) AS updated_at
 	FROM public.vless_clients
 	`
 )
