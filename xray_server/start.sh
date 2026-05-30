@@ -1,5 +1,7 @@
 #!/bin/sh
 
+sudo ufw allow 543/tcp
+
 # Создаём пустой конфиг, если его нет
 if [ ! -f /etc/xray/config.json ]; then
     echo '{}' > /etc/xray/config.json
