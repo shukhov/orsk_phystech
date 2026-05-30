@@ -32,7 +32,7 @@ services:
     restart: "no"
 
   init_profiles:
-    build: ./orsk_phystech/init_profiles
+    build: ./init_profiles
     restart: "no"
     environment:
       DB_HOST: db
