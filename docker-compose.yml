@@ -31,24 +31,24 @@ services:
       "
     restart: "no"
 
-  init_profiles:
-    build: ./init_profiles
-    restart: "no"
-    environment:
-      DB_HOST: db
-      DB_PORT: "5432"
-      DB_NAME: vpn_db
-      DB_USER: vpn_api
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      WATCHER_USERNAME: ${WATCHER_USERNAME}
-      WATCHER_EMAIL: ${WATCHER_EMAIL}
-      WATCHER_PASSWORD: ${WATCHER_PASSWORD}
-      SUPERUSER_USERNAME: ${SUPERUSER_USERNAME}
-      SUPERUSER_EMAIL: ${SUPERUSER_EMAIL}
-      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
-    depends_on:
-      db_init:
-        condition: service_completed_successfully
+  #init_profiles:
+  #  build: ./init_profiles
+  #  restart: "no"
+  #  environment:
+  #    DB_HOST: db
+  #    DB_PORT: "5432"
+  #    DB_NAME: vpn_db
+  #    DB_USER: vpn_api
+  #    DB_PASSWORD: ${POSTGRES_PASSWORD}
+  #    WATCHER_USERNAME: ${WATCHER_USERNAME}
+  #    WATCHER_EMAIL: ${WATCHER_EMAIL}
+  #    WATCHER_PASSWORD: ${WATCHER_PASSWORD}
+  #    SUPERUSER_USERNAME: ${SUPERUSER_USERNAME}
+  #    SUPERUSER_EMAIL: ${SUPERUSER_EMAIL}
+  #    SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+  #  depends_on:
+  #    db_init:
+  #      condition: service_completed_successfully
 
   api:
     build: ./api
