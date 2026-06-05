@@ -2,7 +2,7 @@ package security
 
 var (
 	GetUserByIdQuery = `
-	SELECT id, created_at, updated_at, status 
+	SELECT id, created_at, updated_at, username 
 	FROM public.users 
 	WHERE id = $1`
 

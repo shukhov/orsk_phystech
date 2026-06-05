@@ -21,7 +21,7 @@ export default function AdminInvitePage() {
       const data = await newInvite({
         invite_word: inviteWord,
         vpn_type: vpnType,
-        expires_at: expiresAt || undefined,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
       });
       setResult(data);
       setInviteWord('');
