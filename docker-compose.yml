@@ -70,7 +70,7 @@ services:
       XRAY_PRIVATE_KEY: ${XRAY_PRIVATE_KEY}
       XRAY_SHORT_IDS: ${XRAY_SHORT_IDS}
     depends_on:
-      init_profiles:
+      db_init:
         condition: service_completed_successfully
     ports:
       - "8081:8081"
