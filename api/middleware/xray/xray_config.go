@@ -136,7 +136,7 @@ func (xraySrv *XrayService) GetConfig() (*Config, error) {
 		return nil, err
 	}
 	config := Config{
-		Log: LogConfig{Loglevel: "debug"},
+		Log: LogConfig{Loglevel: "warning"},
 		Inbounds: []Inbound{
 			{
 				Listen:   xraySrv.ConnParams.XrayListen,
