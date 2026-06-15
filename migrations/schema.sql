@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.vless_clients (
 
 CREATE TABLE IF NOT EXISTS public.hysteria_clients (
     id         BIGSERIAL PRIMARY KEY,
-    access_key UUID DEFAULT gen_random_uuid(),
+    password   UUID DEFAULT gen_random_uuid(),
     user_id    BIGINT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     invite_id  BIGINT NOT NULL UNIQUE REFERENCES public.invites(id) ON DELETE CASCADE,
 

@@ -214,7 +214,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/ErrorCallback'
-  /xray/last_update:
+  /xray/get_last_update:
     get:
       summary: Get the last update timestamp of VLESS clients
       tags:
@@ -291,6 +291,49 @@ paths:
             $ref: '#/definitions/ClientPrivateOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /xray/clients/{client_id}/alias:
+    patch:
+      summary: Update alias for a VPN client
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateClientAliasIn'
+      responses:
+        '200':
+          description: Returns the updated client information
+          schema:
+            $ref: '#/definitions/ClientPublicOut'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: Client not found
           schema:
             $ref: '#/definitions/ErrorCallback'
         '500':
@@ -590,6 +633,13 @@ definitions:
       updated_at:
         type: string
         format: date-time
+  UpdateClientAliasIn:
+    type: object
+    required:
+      - new_alias
+    properties:
+      new_alias:
+        type: string
   ConnectionLinkOut:
     type: object
     properties:

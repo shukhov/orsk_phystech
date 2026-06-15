@@ -52,6 +52,10 @@ export interface ClientPrivateOut extends ClientPublicOut {
   invite_id: number;
 }
 
+export interface UpdateClientAliasIn {
+  new_alias: string;
+}
+
 export interface ConnectionLinkOut {
   connection_link: string;
 }

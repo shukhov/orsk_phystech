@@ -92,9 +92,10 @@ func GetXrayLinkById(writer http.ResponseWriter, request *http.Request) {
 	return
 }
 
-func LastUpdate(writer http.ResponseWriter, request *http.Request) {
-	lu, err := xray.XraySrv.LastUpdate()
+func GetLastUpdate(writer http.ResponseWriter, request *http.Request) {
+	glu, err := xray.XraySrv.GetLastUpdate()
 	if err != nil {
+
 		switch {
 		case errors.Is(err, xray.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
@@ -103,6 +104,35 @@ func LastUpdate(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
-	utils.WriteJSON(writer, http.StatusOK, *lu)
+	utils.WriteJSON(writer, http.StatusOK, *glu)
+	return
+}
+
+func UpdateClientAlias(writer http.ResponseWriter, request *http.Request) {
+	clientIdString := request.PathValue("client_id")
+	clientId, err := strconv.ParseInt(clientIdString, 10, 64)
+	if err != nil {
+		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
+		return
+	}
+	updateIn := xray.UpdateClientAliasIn{}
+	err = utils.ReadJSON(request, &updateIn)
+	if err != nil {
+		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
+		return
+	}
+	client, err := xray.XraySrv.UpdateClientAlias(clientId, &updateIn)
+	if err != nil {
+		switch {
+		case errors.Is(err, xray.ErrorClientNotFound):
+			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
+		case errors.Is(err, xray.ErrorClientUpdateBad):
+			utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
+		default:
+			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
+		}
+		return
+	}
+	utils.WriteJSON(writer, http.StatusOK, *client)
 	return
 }

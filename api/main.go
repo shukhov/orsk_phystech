@@ -20,10 +20,11 @@ func main() {
 
 	// XRay Service
 	mux.Handle("GET /api/v1/xray/config", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetConfig))))
-	mux.Handle("GET /api/v1/xray/last_update", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.LastUpdate))))
+	mux.Handle("GET /api/v1/xray/get_last_update", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetLastUpdate))))
 	mux.Handle("GET /api/v1/xray/clients/by_user_id/{user_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetClientsByUserId)))
 	mux.Handle("GET /api/v1/xray/clients/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetClientById)))
 	mux.Handle("GET /api/v1/xray/clients/link/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetXrayLinkById)))
+	mux.Handle("PATCH /api/v1/xray/clients/{client_id}/alias", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.UpdateClientAlias)))
 
 	// Invite Service
 	mux.Handle("POST /api/v1/invite/new",

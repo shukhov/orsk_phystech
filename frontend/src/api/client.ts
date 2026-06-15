@@ -8,6 +8,7 @@ import type {
   ClientPrivateOut,
   ConnectionLinkOut,
   InviteIn,
+  UpdateClientAliasIn,
   InviteActivateIn,
   InviteOut,
   InviteCheckOut,
@@ -93,6 +94,13 @@ export async function getClientById(clientId: number): Promise<ClientPrivateOut>
 
 export async function getXrayLink(clientId: number): Promise<ConnectionLinkOut> {
   return request<ConnectionLinkOut>(`/xray/clients/link/${clientId}`);
+}
+
+export async function updateClientAlias(clientId: number, data: UpdateClientAliasIn): Promise<ClientPublicOut> {
+  return request<ClientPublicOut>(`/xray/clients/${clientId}/alias`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
 }
 
 // --- Invites ---

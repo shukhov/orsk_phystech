@@ -12,6 +12,7 @@ import (
 var (
 	ErrorClientNotFound  = errors.New("xray client is not found")
 	ErrorClientCreateBad = errors.New("incorrect data for create new vpn client")
+	ErrorClientUpdateBad = errors.New("incorrect data for update vpn client alias")
 )
 
 type ClientPublicOut struct {
@@ -33,6 +34,10 @@ type NewClientIn struct {
 	InviteId int64  `json:"invite_id"`
 	UserId   int64  `json:"user_id"`
 	Alias    string `json:"alias"`
+}
+
+type UpdateClientAliasIn struct {
+	NewAlias string `json:"new_alias"`
 }
 
 type LastUpdateOut struct {
@@ -113,7 +118,7 @@ func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.
 	return &clientOut, nil
 }
 
-func (xraySrv *XrayService) LastUpdate() (*LastUpdateOut, error) {
+func (xraySrv *XrayService) GetLastUpdate() (*LastUpdateOut, error) {
 	lastUpdateOut := LastUpdateOut{}
 	err := xraySrv.DB.QueryRow(LastUpdateQuery).Scan(&lastUpdateOut.UpdatedAt)
 	if err != nil {
@@ -126,4 +131,21 @@ func (xraySrv *XrayService) LastUpdate() (*LastUpdateOut, error) {
 		}
 	}
 	return &lastUpdateOut, nil
+}
+
+func (xraySrv *XrayService) UpdateClientAlias(clientId int64, updateIn *UpdateClientAliasIn) (*ClientPublicOut, error) {
+	clientOut := new(ClientPublicOut)
+	err := xraySrv.DB.QueryRow(UpdateClientAliasQuery, updateIn.NewAlias, clientId).Scan(
+		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
+		&clientOut.CreatedAt, &clientOut.UpdatedAt)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrorClientNotFound
+		default:
+			xraySrv.logger.Printf("error updating client alias: %#v", err)
+			return nil, ErrorClientUpdateBad
+		}
+	}
+	return clientOut, nil
 }

@@ -24,9 +24,9 @@ var (
     FROM public.vless_clients WHERE id = $1`
 
 	GetAllInConfigClientsQuery = `
-	SELECT 
-	    vc.access_key AS id, 
-	    'xtls-rprx-vision' AS flow 
+	SELECT
+	    vc.access_key AS id,
+	    'xtls-rprx-vision' AS flow
 	FROM public.vless_clients AS vc
 	JOIN public.users AS us
 		ON vc.user_id=us.id
@@ -44,6 +44,13 @@ var (
 	SELECT access_key, alias
 	FROM public.vless_clients
 	WHERE id = $1 AND user_id = $2
+	`
+
+	UpdateClientAliasQuery = `
+	UPDATE public.vless_clients
+	SET alias = $1, updated_at = now()
+	WHERE id = $2
+	RETURNING id, alias, status, created_at, updated_at
 	`
 
 	LastUpdateQuery = `

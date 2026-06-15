@@ -2,6 +2,7 @@ package invites
 
 import (
 	"api/database"
+	"api/middleware/hysteria"
 	"api/middleware/xray"
 	"context"
 	"crypto/hmac"
@@ -124,6 +125,19 @@ func (invSrv *InviteService) ActivateInvite(inviteCheckIn *InviteActivateIn) (*I
 		inviteCheckOut.Id = newClient.Id
 		inviteCheckOut.Alias = newClient.Alias
 		inviteCheckOut.VPNType = "vless"
+	case "hysteria":
+		newHystClient := hysteria.NewClientIn{
+			InviteId: inviteId,
+			UserId:   inviteCheckIn.UserId,
+			Alias:    inviteCheckIn.Alias,
+		}
+		newClient, err := hysteria.HystSrv.NewClient(&newHystClient, tx)
+		if err != nil {
+			return nil, err
+		}
+		inviteCheckOut.Id = newClient.Id
+		inviteCheckOut.Alias = newClient.Alias
+		inviteCheckOut.VPNType = "hysteria"
 	default:
 		return nil, TypeOfVPNIsUnknownOrNotFound
 	}

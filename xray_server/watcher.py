@@ -33,7 +33,7 @@ REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # Эндпоинты можно переопределить через env, если у тебя другие пути.
 LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/auth/login")
-LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/xray/last_update")
+LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/xray/get_last_update")
 CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/xray/config")
 
 # Если API отдаёт токен не в поле "token", можно переопределить.
