@@ -26,6 +26,9 @@ func main() {
 	mux.Handle("GET /api/v1/xray/clients/link/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetXrayLinkById)))
 	mux.Handle("PATCH /api/v1/xray/clients/{client_id}/alias", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.UpdateClientAlias)))
 
+	// Hysteria Service
+	mux.Handle("PATCH /api/v1/hysteria/clients/{client_id}/alias", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.UpdateHysteriaClientAlias)))
+
 	// Invite Service
 	mux.Handle("POST /api/v1/invite/new",
 		handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(2, http.HandlerFunc(handlers.NewInvite))))

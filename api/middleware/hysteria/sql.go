@@ -26,4 +26,11 @@ var (
 	WHERE
 	    hc.status='active'
 	  AND us.status='active'`
+
+	UpdateClientAliasQuery = `
+	UPDATE public.hysteria_clients
+	SET alias = $1, updated_at = now()
+	WHERE id = $2
+	RETURNING id, alias, status, created_at, updated_at
+	`
 )

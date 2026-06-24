@@ -11,6 +11,7 @@ import (
 var (
 	ErrorClientNotFound  = errors.New("hysteria client is not found")
 	ErrorClientCreateBad = errors.New("incorrect data for create new hysteria client")
+	ErrorClientUpdateBad = errors.New("incorrect data for update hysteria client alias")
 )
 
 type Userpass = map[string]string
@@ -27,6 +28,10 @@ type NewClientIn struct {
 	InviteId int64  `json:"invite_id"`
 	UserId   int64  `json:"user_id"`
 	Alias    string `json:"alias"`
+}
+
+type UpdateClientAliasIn struct {
+	NewAlias string `json:"new_alias"`
 }
 
 func (hystSrv *HysteriaService) NewClient(newClientIn *NewClientIn, externalTx *sql.Tx) (*ClientPublicOut, error) {
@@ -73,4 +78,21 @@ func (hystSrv *HysteriaService) GetAllInConfigClients() (*Userpass, error) {
 		inConfigClient[user] = password
 	}
 	return &inConfigClient, nil
+}
+
+func (hystSrv *HysteriaService) UpdateClientAlias(clientId int64, updateIn *UpdateClientAliasIn) (*ClientPublicOut, error) {
+	clientOut := new(ClientPublicOut)
+	err := hystSrv.DB.QueryRow(UpdateClientAliasQuery, updateIn.NewAlias, clientId).Scan(
+		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
+		&clientOut.CreatedAt, &clientOut.UpdatedAt)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrorClientNotFound
+		default:
+			hystSrv.logger.Printf("error updating client alias: %#v", err)
+			return nil, ErrorClientUpdateBad
+		}
+	}
+	return clientOut, nil
 }

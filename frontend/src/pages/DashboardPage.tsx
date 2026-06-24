@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { useAuth } from '@/context/AuthContext';
-import { getClientsByUserId, getXrayLink } from '@/api/client';
+import { getClientsByUserId, getXrayLink, updateClientAlias } from '@/api/client';
 import type { ClientPublicOut } from '@/types';
 
 export default function DashboardPage() {
@@ -15,6 +15,12 @@ export default function DashboardPage() {
   const [linkError, setLinkError] = useState('');
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
+
+  // Редактирование алиаса
+  const [editingClientId, setEditingClientId] = useState<number | null>(null);
+  const [editAlias, setEditAlias] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -70,6 +76,33 @@ export default function DashboardPage() {
       document.body.removeChild(textarea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleStartEdit = (client: ClientPublicOut) => {
+    setEditingClientId(client.id);
+    setEditAlias(client.alias);
+    setEditError('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingClientId(null);
+    setEditAlias('');
+    setEditError('');
+  };
+
+  const handleSaveAlias = async (clientId: number) => {
+    if (!editAlias.trim()) return;
+    setEditLoading(true);
+    setEditError('');
+    try {
+      const updated = await updateClientAlias(clientId, { new_alias: editAlias.trim() });
+      setClients((prev) => prev.map((c) => (c.id === clientId ? updated : c)));
+      setEditingClientId(null);
+    } catch (err: any) {
+      setEditError(err.message || 'Ошибка сохранения');
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -163,8 +196,46 @@ export default function DashboardPage() {
                 className="bg-gray-800 border border-gray-700 rounded-xl p-4"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-white font-medium">{client.alias}</span>
+                  <div className="flex items-center">
+                    {editingClientId === client.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editAlias}
+                          onChange={(e) => setEditAlias(e.target.value)}
+                          className="px-3 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 w-40"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveAlias(client.id);
+                            if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                        />
+                        <button
+                          onClick={() => handleSaveAlias(client.id)}
+                          disabled={editLoading}
+                          className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm rounded-lg transition"
+                        >
+                          {editLoading ? '...' : '✓'}
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-white font-medium">{client.alias}</span>
+                        <button
+                          onClick={() => handleStartEdit(client)}
+                          className="ml-2 text-gray-500 hover:text-gray-300 transition"
+                          title="Изменить алиас"
+                        >
+                          ✎
+                        </button>
+                      </>
+                    )}
                     <span className={`ml-3 text-sm ${statusColor(client.status)}`}>
                       {statusLabel(client.status)}
                     </span>
@@ -179,6 +250,10 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </div>
+
+                {editError && editingClientId === client.id && (
+                  <p className="mt-2 text-red-400 text-xs">{editError}</p>
+                )}
 
                 {activeClientId === client.id && (
                   <div className="mt-3 pt-3 border-t border-gray-700">
