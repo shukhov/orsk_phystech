@@ -115,17 +115,21 @@ func UpdateClientAlias(writer http.ResponseWriter, request *http.Request) {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
+	ctx := request.Context()
+	userId := security.GetUserIdFromContext(&ctx)
 	updateIn := xray.UpdateClientAliasIn{}
 	err = utils.ReadJSON(request, &updateIn)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	client, err := xray.XraySrv.UpdateClientAlias(clientId, &updateIn)
+	client, err := xray.XraySrv.UpdateClientAlias(clientId, userId, &updateIn)
 	if err != nil {
 		switch {
 		case errors.Is(err, xray.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
+		case errors.Is(err, xray.ErrorClientForbidden):
+			utils.WriteJSON(writer, http.StatusForbidden, utils.ErrorCallback{ErrorText: err.Error()})
 		case errors.Is(err, xray.ErrorClientUpdateBad):
 			utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		default:
@@ -135,4 +139,30 @@ func UpdateClientAlias(writer http.ResponseWriter, request *http.Request) {
 	}
 	utils.WriteJSON(writer, http.StatusOK, *client)
 	return
+}
+
+func DeleteClientById(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	userId := security.GetUserIdFromContext(&ctx)
+	clientIdString := request.PathValue("client_id")
+	clientId, err := strconv.ParseInt(clientIdString, 10, 64)
+	if err != nil {
+		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
+		return
+	}
+	client, err := xray.XraySrv.DeleteClientById(clientId, userId)
+	if err != nil {
+		switch {
+		case errors.Is(err, xray.ErrorClientNotFound):
+			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
+		case errors.Is(err, xray.ErrorClientForbidden):
+			utils.WriteJSON(writer, http.StatusForbidden, utils.ErrorCallback{ErrorText: err.Error()})
+		case errors.Is(err, xray.ErrorClientDeleteBad):
+			utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
+		default:
+			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
+		}
+		return
+	}
+	utils.WriteJSON(writer, http.StatusOK, *client)
 }

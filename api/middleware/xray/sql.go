@@ -9,7 +9,7 @@ var (
 	    created_at, 
 	    updated_at
 	FROM public.vless_clients 
-	WHERE user_id = $1`
+	WHERE user_id = $1 AND status != 'deleted'`
 
 	GetClientByIdQuery = `
 	SELECT 
@@ -50,6 +50,13 @@ var (
 	UPDATE public.vless_clients
 	SET alias = $1, updated_at = now()
 	WHERE id = $2
+	RETURNING id, alias, status, created_at, updated_at
+	`
+
+	DeleteClientByIdQuery = `
+	UPDATE public.vless_clients
+	SET status = 'deleted', updated_at = now()
+	WHERE id = $1
 	RETURNING id, alias, status, created_at, updated_at
 	`
 

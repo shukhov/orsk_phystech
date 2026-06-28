@@ -13,6 +13,8 @@ var (
 	ErrorClientNotFound  = errors.New("xray client is not found")
 	ErrorClientCreateBad = errors.New("incorrect data for create new vpn client")
 	ErrorClientUpdateBad = errors.New("incorrect data for update vpn client alias")
+	ErrorClientDeleteBad = errors.New("incorrect data for delete vpn client")
+	ErrorClientForbidden = errors.New("client does not belong to this user")
 )
 
 type ClientPublicOut struct {
@@ -133,9 +135,16 @@ func (xraySrv *XrayService) GetLastUpdate() (*LastUpdateOut, error) {
 	return &lastUpdateOut, nil
 }
 
-func (xraySrv *XrayService) UpdateClientAlias(clientId int64, updateIn *UpdateClientAliasIn) (*ClientPublicOut, error) {
+func (xraySrv *XrayService) UpdateClientAlias(clientId int64, userId int64, updateIn *UpdateClientAliasIn) (*ClientPublicOut, error) {
+	client, err := xraySrv.GetClientById(clientId)
+	if err != nil {
+		return nil, err
+	}
+	if client.UserId != userId {
+		return nil, ErrorClientForbidden
+	}
 	clientOut := new(ClientPublicOut)
-	err := xraySrv.DB.QueryRow(UpdateClientAliasQuery, updateIn.NewAlias, clientId).Scan(
+	err = xraySrv.DB.QueryRow(UpdateClientAliasQuery, updateIn.NewAlias, clientId).Scan(
 		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
 		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
@@ -145,6 +154,30 @@ func (xraySrv *XrayService) UpdateClientAlias(clientId int64, updateIn *UpdateCl
 		default:
 			xraySrv.logger.Printf("error updating client alias: %#v", err)
 			return nil, ErrorClientUpdateBad
+		}
+	}
+	return clientOut, nil
+}
+
+func (xraySrv *XrayService) DeleteClientById(clientId int64, userId int64) (*ClientPublicOut, error) {
+	client, err := xraySrv.GetClientById(clientId)
+	if err != nil {
+		return nil, err
+	}
+	if client.UserId != userId {
+		return nil, ErrorClientForbidden
+	}
+	clientOut := new(ClientPublicOut)
+	err = xraySrv.DB.QueryRow(DeleteClientByIdQuery, clientId).Scan(
+		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
+		&clientOut.CreatedAt, &clientOut.UpdatedAt)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrorClientNotFound
+		default:
+			xraySrv.logger.Printf("error deleting client: %#v", err)
+			return nil, ErrorClientDeleteBad
 		}
 	}
 	return clientOut, nil

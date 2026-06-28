@@ -81,13 +81,14 @@ export default function AdminInvitePage() {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm mb-1">Тип VPN</label>
+            <label className="block text-gray-300 text-sm mb-1">Протокол VPN</label>
             <select
               value={vpnType}
               onChange={(e) => setVpnType(e.target.value)}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
             >
-              <option value="vless">VLESS</option>
+              <option value="xray">VLESS (XRay)</option>
+              <option value="hysteria">Hysteria2</option>
             </select>
           </div>
 

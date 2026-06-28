@@ -52,12 +52,22 @@ export interface ClientPrivateOut extends ClientPublicOut {
   invite_id: number;
 }
 
+export interface HysteriaClientPrivateOut extends ClientPublicOut {
+  access_key: string;
+  user_id: number;
+  invite_id: number;
+}
+
 export interface UpdateClientAliasIn {
   new_alias: string;
 }
 
 export interface ConnectionLinkOut {
   connection_link: string;
+}
+
+export interface LastUpdateOut {
+  updated_at: string;
 }
 
 // --- Invite ---

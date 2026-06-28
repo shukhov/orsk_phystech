@@ -6,6 +6,7 @@ import type {
   UserPublicOut,
   ClientPublicOut,
   ClientPrivateOut,
+  HysteriaClientPrivateOut,
   ConnectionLinkOut,
   InviteIn,
   UpdateClientAliasIn,
@@ -82,24 +83,56 @@ export async function getRoleById(roleId: number): Promise<Role> {
   return request<Role>(`/security/roles/${roleId}`);
 }
 
-// --- XRay / Clients ---
+// --- XRay / VLESS Clients ---
 
-export async function getClientsByUserId(userId: number): Promise<ClientPublicOut[]> {
+export async function getVlessClientsByUserId(userId: number): Promise<ClientPublicOut[]> {
   return request<ClientPublicOut[]>(`/xray/clients/by_user_id/${userId}`);
 }
 
-export async function getClientById(clientId: number): Promise<ClientPrivateOut> {
+export async function getVlessClientById(clientId: string): Promise<ClientPrivateOut> {
   return request<ClientPrivateOut>(`/xray/clients/${clientId}`);
 }
 
-export async function getXrayLink(clientId: number): Promise<ConnectionLinkOut> {
+export async function getXrayLink(clientId: string): Promise<ConnectionLinkOut> {
   return request<ConnectionLinkOut>(`/xray/clients/link/${clientId}`);
 }
 
-export async function updateClientAlias(clientId: number, data: UpdateClientAliasIn): Promise<ClientPublicOut> {
+export async function updateVlessClientAlias(clientId: number, data: UpdateClientAliasIn): Promise<ClientPublicOut> {
   return request<ClientPublicOut>(`/xray/clients/${clientId}/alias`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+  });
+}
+
+export async function deleteVlessClient(clientId: number): Promise<ClientPublicOut> {
+  return request<ClientPublicOut>(`/xray/clients/${clientId}`, {
+    method: 'DELETE',
+  });
+}
+
+// --- Hysteria Clients ---
+
+export async function getHysteriaClientsByUserId(userId: number): Promise<ClientPublicOut[]> {
+  return request<ClientPublicOut[]>(`/hysteria/clients/by_user_id/${userId}`);
+}
+
+export async function getHysteriaClientById(clientId: number): Promise<HysteriaClientPrivateOut> {
+  return request<HysteriaClientPrivateOut>(`/hysteria/clients/${clientId}`);
+}
+export async function getHysteriaLink(clientId: number): Promise<ConnectionLinkOut> {
+  return request<ConnectionLinkOut>(`/hysteria/clients/link/${clientId}`);
+}
+
+export async function updateHysteriaClientAlias(clientId: number, data: UpdateClientAliasIn): Promise<ClientPublicOut> {
+  return request<ClientPublicOut>(`/hysteria/clients/${clientId}/alias`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteHysteriaClient(clientId: number): Promise<ClientPublicOut> {
+  return request<ClientPublicOut>(`/hysteria/clients/${clientId}`, {
+    method: 'DELETE',
   });
 }
 
