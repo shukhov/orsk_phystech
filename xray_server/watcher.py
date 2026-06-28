@@ -32,7 +32,7 @@ RESTART_COMMAND = os.getenv("RESTART_COMMAND", "")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # Эндпоинты можно переопределить через env, если у тебя другие пути.
-LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/auth/login")
+LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/security/login")
 LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/xray/get_last_update")
 CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/xray/config")
 
