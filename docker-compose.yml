@@ -117,6 +117,7 @@ services:
     build: ./hysteria_server
     restart: unless-stopped
     ports:
+      - "80:80/tcp"
       - "643:643/tcp"
       - "643:643/udp"
     environment:
