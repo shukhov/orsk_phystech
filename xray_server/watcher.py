@@ -32,9 +32,9 @@ RESTART_COMMAND = os.getenv("RESTART_COMMAND", "")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # Эндпоинты можно переопределить через env, если у тебя другие пути.
-LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/security/login")
-LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/xray/get_last_update")
-CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/xray/config")
+LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/api/v1/security/login")
+LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/api/v1/xray/get_last_update")
+CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/api/v1/xray/config")
 
 # Если API отдаёт токен не в поле "token", можно переопределить.
 TOKEN_FIELD = os.getenv("TOKEN_FIELD", "token")
@@ -73,11 +73,11 @@ def require_env() -> None:
     missing = []
 
     if not API_URL:
-        missing.append("API_URL")
+        missing.append("WATCHER_API_URL")
     if not LOGIN_EMAIL:
-        missing.append("LOGIN_EMAIL")
+        missing.append("WATCHER_EMAIL")
     if not LOGIN_PASSWORD:
-        missing.append("LOGIN_PASSWORD")
+        missing.append("WATCHER_PASSWORD")
 
     if missing:
         raise WatcherError(f"Missing required env vars: {', '.join(missing)}")

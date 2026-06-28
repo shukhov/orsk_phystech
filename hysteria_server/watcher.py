@@ -32,9 +32,9 @@ RESTART_COMMAND = os.getenv("RESTART_COMMAND", "")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # Эндпоинты
-LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/security/login")
-LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/hysteria/get_last_update")
-CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/hysteria/config")
+LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/api/v1/security/login")
+LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/api/v1/hysteria/get_last_update")
+CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/api/v1/hysteria/config")
 
 # Если API отдаёт токен не в поле "token", можно переопределить.
 TOKEN_FIELD = os.getenv("TOKEN_FIELD", "token")
@@ -73,11 +73,11 @@ def require_env() -> None:
     missing = []
 
     if not API_URL:
-        missing.append("API_URL")
+        missing.append("WATCHER_API_URL")
     if not WATCHER_EMAIL:
-        missing.append("WatcherLoginEmail")
+        missing.append("WATCHER_HYSTERIA_EMAIL")
     if not WATCHER_PASSWORD:
-        missing.append("WatcherLoginPassword")
+        missing.append("WATCHER_HYSTERIA_PASSWORD")
 
     if missing:
         raise WatcherError(f"Missing required env vars: {', '.join(missing)}")
