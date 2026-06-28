@@ -70,8 +70,9 @@ type Config struct {
 }
 
 type TLSConfig struct {
-	Cert string `json:"cert"`
-	Key  string `json:"key"`
+	Cert     string `json:"cert"`
+	Key      string `json:"key"`
+	SNIGuard string `json:"sniGuard,omitempty"`
 }
 
 type AuthConfig struct {
@@ -111,8 +112,9 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 	return &Config{
 		Listen: hystSrv.ConnParams.HysteriaListen,
 		TLS: TLSConfig{
-			Cert: "/etc/hysteria/server.crt",
-			Key:  "/etc/hysteria/server.key",
+			Cert:     "/etc/hysteria/server.crt",
+			Key:      "/etc/hysteria/server.key",
+			SNIGuard: "disable",
 		},
 		Auth: AuthConfig{
 			Type:     "userpass",
