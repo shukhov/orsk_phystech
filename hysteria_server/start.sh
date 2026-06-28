@@ -37,9 +37,8 @@ generate_certificate() {
     | openssl dgst \
         -sha256 \
         -binary \
-    | openssl enc \
-        -base64 \
-        > "$PIN_FILE"
+    | xxd -p -c 256 \
+    > "$PIN_FILE"
 
     chmod 600 "$KEY_FILE"
     chmod 644 "$CERT_FILE" "$PIN_FILE"
