@@ -12,7 +12,13 @@ type ConnectionLinkOut struct {
 	ConnectionLink string `json:"connection_link"`
 }
 
+type ConnectionAccessOut struct {
+	AccessKey string
+	Alias     string
+}
+
 type Params struct {
+	Username     string
 	Password     string
 	Domain       string
 	ObfsPassword string
@@ -24,6 +30,11 @@ type Params struct {
 	Insecure     int8
 }
 
+type InConfigClient struct {
+	Userpass Userpass
+	Alias    string
+}
+
 func (hystSrv *HysteriaService) getPin() string {
 	pin, err := os.ReadFile("/etc/hysteria/pin.txt")
 	if err != nil {
@@ -33,12 +44,14 @@ func (hystSrv *HysteriaService) getPin() string {
 	return strings.TrimSpace(string(pin))
 }
 
-func (hystSrv *HysteriaService) makeLinkParams(password, alias string) *Params {
+func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias string) *Params {
+	// Guarantee: in `inConfigClient` will come only 1 record
 	port, err := strconv.ParseInt(strings.Split(hystSrv.ConnParams.HysteriaListen, ":")[1], 10, 16)
 	if err != nil {
 		panic(err)
 	}
 	return &Params{
+		Username:     username,
 		Password:     password,
 		Domain:       hystSrv.ConnParams.HysteriaHost,
 		ObfsPassword: hystSrv.ConnParams.HysteriaObfsPassword,
@@ -60,19 +73,20 @@ func (hystSrv *HysteriaService) link(p *Params) string {
 	q.Set("pinSHA256", p.PinSHA256)
 
 	frag := url.PathEscape(p.ProfileName)
-	return fmt.Sprintf("hysteria2://%s@%s:%d/?%s#%s",
-		p.Password, p.Domain, p.Port, q.Encode(), frag,
+	return fmt.Sprintf("hysteria2://%s:%s@%s:%d/?%s#%s",
+		p.Username, p.Password, p.Domain, p.Port, q.Encode(), frag,
 	)
 }
 
 func (hystSrv *HysteriaService) GetXrayLinkById(clientId int64, userId int64) (*ConnectionLinkOut, error) {
-	var password, alias string
-	err := hystSrv.DB.QueryRow(GetHysteriaLinkByIdQuery, clientId, userId).Scan(&password, &alias)
+	var username, password, alias string
+	err := hystSrv.DB.QueryRow(GetHysteriaLinkByIdQuery, clientId, userId).Scan(&username, &password, &alias)
 	if err != nil {
 		return nil, ErrorClientNotFound
 	}
-	params := hystSrv.makeLinkParams(password, alias)
+	params := hystSrv.makeXrayLinkParams(username, password, alias)
 
 	link := hystSrv.link(params)
 	return &ConnectionLinkOut{ConnectionLink: link}, nil
+
 }

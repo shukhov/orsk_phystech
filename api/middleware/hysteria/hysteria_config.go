@@ -15,7 +15,6 @@ type ConnectionParams struct {
 	HysteriaObfsPassword       string
 	HysteriaMasqueradeProxyUrl string
 	HysteriaSni                string
-	HysteriaPassword           string
 	HysteriaBandwidthUp        int64
 	HysteriaBandwidthDown      int64
 }
@@ -50,7 +49,6 @@ func NewHysteriaService() *HysteriaService {
 		HysteriaObfsPassword:       os.Getenv("HYSTERIA_OBFS_PASSWORD"),
 		HysteriaMasqueradeProxyUrl: os.Getenv("HYSTERIA_MASQUERADE_PROXY_URL"),
 		HysteriaSni:                os.Getenv("HYSTERIA_SNI"),
-		HysteriaPassword:           os.Getenv("HYSTERIA_PASSWORD"),
 		HysteriaBandwidthUp:        bandwidthUp,
 		HysteriaBandwidthDown:      bandwidthDown,
 	}
@@ -58,11 +56,16 @@ func NewHysteriaService() *HysteriaService {
 }
 
 type Config struct {
-	Listen     string            `json:"listen"`
-	TLS        TLSConfig         `json:"tls"`
-	Auth       AuthConfig        `json:"auth"`
-	Bandwidth  Bandwidth         `json:"bandwidth"`
-	Obfs       *ObfsConfig       `json:"obfs,omitempty"`
+	Listen string `json:"listen"`
+
+	TLS TLSConfig `json:"tls"`
+
+	Auth AuthConfig `json:"auth"`
+
+	Bandwidth Bandwidth `json:"bandwidth"`
+
+	Obfs *ObfsConfig `json:"obfs,omitempty"`
+
 	Masquerade *MasqueradeConfig `json:"masquerade,omitempty"`
 }
 
@@ -74,7 +77,7 @@ type TLSConfig struct {
 
 type AuthConfig struct {
 	Type     string   `json:"type"`
-	Password []string `json:"password,omitempty"`
+	Userpass Userpass `json:"userpass,omitempty"`
 }
 
 type ObfsConfig struct {
@@ -114,8 +117,8 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 			SNIGuard: "disable",
 		},
 		Auth: AuthConfig{
-			Type:     "password",
-			Password: *inConfigClinent,
+			Type:     "userpass",
+			Userpass: *inConfigClinent,
 		},
 		Bandwidth: Bandwidth{
 			Up:   fmt.Sprintf("%d mbps", hystSrv.ConnParams.HysteriaBandwidthUp),
@@ -135,6 +138,7 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 			},
 		},
 	}, nil
+
 }
 
 /*
@@ -147,8 +151,10 @@ tls:
             - vpn.example.com
         email: admin@example.com
 auth:
-    type: password
-    password: some-password
+    type: userpass
+    userpass:
+        42-100: 550e8400-e29b-41d4-a716-446655440000
+        42-101: 6c2a2e34-f53b-4d17-b34c-f7dd8c1b0a5e
 obfs:
     type: salamander
     salamander:

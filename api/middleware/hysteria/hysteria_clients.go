@@ -17,7 +17,7 @@ var (
 	ErrorClientForbidden = errors.New("hysteria client does not belong to this user")
 )
 
-type Passwords = []string
+type Userpass = map[string]string
 
 type ClientPublicOut struct {
 	Id        int64     `json:"id"`
@@ -122,19 +122,19 @@ func (hystSrv *HysteriaService) NewClient(newClientIn *NewClientIn, externalTx *
 	return &clientOut, nil
 }
 
-func (hystSrv *HysteriaService) GetAllInConfigClients() (*Passwords, error) {
-	inConfigClient := make(Passwords, 0, 3)
+func (hystSrv *HysteriaService) GetAllInConfigClients() (*Userpass, error) {
+	inConfigClient := make(Userpass)
 	rows, err := hystSrv.DB.Query(GetAllInConfigClientsQuery)
 	if err != nil {
 		return nil, database.InternalDBError
 	}
 	for rows.Next() {
-		var password string
-		err = rows.Scan(&password)
+		var user, password string
+		err = rows.Scan(&user, &password)
 		if err != nil {
 			return nil, database.InternalDBError
 		}
-		inConfigClient = append(inConfigClient, password)
+		inConfigClient[user] = password
 	}
 	return &inConfigClient, nil
 }
