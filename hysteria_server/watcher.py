@@ -224,22 +224,32 @@ def get_config(token: str) -> dict[str, Any]:
 # ----------------------------
 
 def validate_config_file(path: str) -> None:
-    """
-    Проверяет конфиг командой:
-    hysteria check -c <path>
-    """
     log.info("Validating Hysteria config: %s", path)
+    proc = subprocess.Popen(
+        ["hysteria", "server", "-c", path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
 
-    result = run_command(["hysteria", "check", "-c", path], timeout=30)
-
-    if result.returncode != 0:
+    )
+    # если за 2 секунды процесс завершился —
+    # значит есть ошибка в конфиге
+    time.sleep(2)
+    if proc.poll() is not None:
+        stdout, stderr = proc.communicate()
         raise WatcherError(
             "Invalid Hysteria config\n"
-            f"exit_code={result.returncode}\n"
-            f"stdout={result.stdout}\n"
-            f"stderr={result.stderr}"
-        )
+            f"exit_code={proc.returncode}\n"
+            f"stdout={stdout}\n"
+            f"stderr={stderr}"
 
+        )
+    # конфиг валиден — завершаем тестовый процесс
+    proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
     log.info("Hysteria config is valid")
 
 
