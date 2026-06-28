@@ -10,7 +10,9 @@ KEY_FILE="${CERT_DIR}/server.key"
 PIN_FILE="${CERT_DIR}/pin.txt"
 
 generate_certificate() {
-    if [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ] && [ -f "$PIN_FILE" ]; then
+    if [ -f "$CERT_FILE" ] && \
+       [ -f "$KEY_FILE" ] && \
+       [ -f "$PIN_FILE" ]; then
         echo "TLS certificate already exists"
         return
     fi
@@ -20,30 +22,22 @@ generate_certificate() {
     mkdir -p "$CERT_DIR"
     cd "$CERT_DIR"
 
-    hysteria cert \
-        --cert server.crt \
-        --key server.key \
-        --overwrite
+    CERT_OUTPUT="$(
+        hysteria cert \
+            --cert server.crt \
+            --key server.key \
+            --overwrite 2>&1
+    )"
 
-    echo "Calculating pinSHA256..."
+    echo "$CERT_OUTPUT"
 
-    openssl x509 \
-        -pubkey \
-        -in "$CERT_FILE" \
-        -noout \
-    | openssl pkey \
-        -pubin \
-        -outform DER \
-    | openssl dgst \
-        -sha256 \
-        -binary \
-    | xxd -p -c 256 \
-    > "$PIN_FILE"
+    echo "$CERT_OUTPUT" \
+        | awk '/pinSHA256:/ {print $2}' \
+        > "$PIN_FILE"
 
     chmod 600 "$KEY_FILE"
     chmod 644 "$CERT_FILE" "$PIN_FILE"
 
-    echo "Certificate generated."
     echo "pinSHA256=$(cat "$PIN_FILE")"
 }
 

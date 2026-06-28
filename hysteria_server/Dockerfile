@@ -5,14 +5,13 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl \
-        openssl \
         ca-certificates \
         procps && \
     curl -fsSL \
         https://download.hysteria.network/app/latest/hysteria-linux-amd64 \
         -o /usr/local/bin/hysteria && \
     chmod +x /usr/local/bin/hysteria && \
-    /usr/local/bin/hysteria version && \
+    hysteria version && \
     apt-get purge -y curl && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
