@@ -32,7 +32,6 @@ var (
 
 	GetHysteriaLinkByIdQuery = `
 	SELECT
-	    user_id::text || '-' || id::text AS user,
 		password,
 		alias
 	FROM public.hysteria_clients
@@ -41,7 +40,6 @@ var (
 
 	GetAllInConfigClientsQuery = `
 	SELECT
-	    hc.user_id::text || '-' || hc.id::text AS user,
 		password
 	FROM public.hysteria_clients AS hc
 	JOIN public.users AS us

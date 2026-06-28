@@ -959,26 +959,19 @@ definitions:
       tls:
         type: object
         properties:
-          type:
+          cert:
             type: string
-          acme:
-            type: object
-            properties:
-              domains:
-                type: array
-                items:
-                  type: string
-              email:
-                type: string
+          key:
+            type: string
+          sniGuard:
+            type: string
       auth:
         type: object
         properties:
           type:
             type: string
-          userpass:
-            type: object
-            additionalProperties:
-              type: string
+          password:
+            type: string
       bandwidth:
         type: object
         properties:
@@ -1008,6 +1001,7 @@ definitions:
                 type: string
               rewriteHost:
                 type: boolean
+
   InviteCheckOut:
     type: object
     properties:
