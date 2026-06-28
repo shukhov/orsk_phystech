@@ -117,7 +117,7 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 	return &Config{
 		Listen: hystSrv.ConnParams.HysteriaListen,
 		TLS: &TLSConfig{
-			Type: "tls",
+			Type: "acme",
 			ACME: ACMEConfig{
 				Domains: hystSrv.ConnParams.AcmeDomains,
 				Email:   hystSrv.ConnParams.HysteriaAcmeEmail,
