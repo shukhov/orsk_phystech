@@ -53,7 +53,7 @@ func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias str
 	return &Params{
 		Username:     username,
 		Password:     password,
-		Domain:       hystSrv.ConnParams.ServerHost,
+		Domain:       hystSrv.ConnParams.HysteriaHost,
 		ObfsPassword: hystSrv.ConnParams.HysteriaObfsPassword,
 		Obfs:         "salamander",
 		Sni:          hystSrv.ConnParams.HysteriaMasqueradeProxyUrl,

@@ -10,7 +10,7 @@ import (
 )
 
 type ConnectionParams struct {
-	ServerHost                 string
+	HysteriaHost               string
 	HysteriaListen             string
 	HysteriaObfsPassword       string
 	HysteriaMasqueradeProxyUrl string
@@ -43,7 +43,7 @@ func NewHysteriaService() *HysteriaService {
 		panic(err)
 	}
 	HystSrv.ConnParams = &ConnectionParams{
-		ServerHost:                 os.Getenv("HYSTERIA_SERVER_HOST"),
+		HysteriaHost:               os.Getenv("HYSTERIA_HOST"),
 		HysteriaListen:             os.Getenv("HYSTERIA_LISTEN"),
 		HysteriaObfsPassword:       os.Getenv("HYSTERIA_OBFS_PASSWORD"),
 		HysteriaMasqueradeProxyUrl: os.Getenv("HYSTERIA_MASQUERADE_PROXY_URL"),
