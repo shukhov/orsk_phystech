@@ -60,7 +60,7 @@ func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias str
 		ProfileName:  alias,
 		PinSHA256:    hystSrv.getPin(),
 		Port:         int16(port),
-		Insecure:     1,
+		Insecure:     0,
 	}
 }
 
