@@ -31,7 +31,13 @@ generate_certificate() {
 
     echo "$CERT_OUTPUT"
 
-    PIN="$(printf "%s" "$CERT_OUTPUT" | awk '/pinSHA256:/ {print $2}')"
+    PIN="$(
+        printf "%s" "$CERT_OUTPUT" |
+        grep 'pinSHA256:' |
+        head -n1 |
+        awk '{print $2}'
+    )"
+
     printf "%s" "$PIN" > "$PIN_FILE"
 
     chmod 600 "$KEY_FILE"
