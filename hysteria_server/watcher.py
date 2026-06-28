@@ -224,14 +224,13 @@ def get_config(token: str) -> dict[str, Any]:
 # ----------------------------
 
 
-def write_config_atomically(config: dict[str, Any]) -> bool:
+def write_config(config: dict[str, Any]) -> bool:
     """
-    Атомарно записывает конфиг.
+    Записывает конфиг напрямую.
 
     Возвращает True, если содержимое изменилось.
     """
     config_dir = os.path.dirname(HYSTERIA_CONFIG_PATH)
-    config_base = os.path.basename(HYSTERIA_CONFIG_PATH)
 
     if config_dir:
         os.makedirs(config_dir, exist_ok=True)
@@ -252,12 +251,10 @@ def write_config_atomically(config: dict[str, Any]) -> bool:
         log.info("Config content is unchanged")
         return False
 
-    tmp_path = HYSTERIA_CONFIG_PATH + ".tmp"
-
-    with open(tmp_path, "w", encoding="utf-8") as f:
+    with open(HYSTERIA_CONFIG_PATH, "w", encoding="utf-8") as f:
         f.write(new_content)
-
-    os.replace(tmp_path, HYSTERIA_CONFIG_PATH)
+        f.flush()
+        os.fsync(f.fileno())
 
     log.info("Config updated: %s", HYSTERIA_CONFIG_PATH)
     return True
@@ -300,7 +297,7 @@ def sync_config(token: str) -> bool:
     Возвращает True, если конфиг изменился и рестарт был вызван.
     """
     config = get_config(token)
-    changed = write_config_atomically(config)
+    changed = write_config(config)
 
     if changed:
         restart_hysteria()
