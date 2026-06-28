@@ -2,8 +2,8 @@ package hysteria
 
 import (
 	"fmt"
-	"math/rand"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -35,6 +35,15 @@ type InConfigClient struct {
 	Alias    string
 }
 
+func (hystSrv *HysteriaService) getPin() string {
+	pin, err := os.ReadFile("/etc/hysteria/pin.txt")
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(string(pin))
+}
+
 func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias string) *Params {
 	// Guarantee: in `inConfigClient` will come only 1 record
 	port, err := strconv.ParseInt(strings.Split(hystSrv.ConnParams.HysteriaListen, ":")[1], 10, 16)
@@ -44,12 +53,12 @@ func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias str
 	return &Params{
 		Username:     username,
 		Password:     password,
-		Domain:       hystSrv.ConnParams.AcmeDomains[rand.Intn(len(hystSrv.ConnParams.AcmeDomains))],
+		Domain:       hystSrv.ConnParams.ServerHost,
 		ObfsPassword: hystSrv.ConnParams.HysteriaObfsPassword,
 		Obfs:         "salamander",
 		Sni:          hystSrv.ConnParams.HysteriaMasqueradeProxyUrl,
 		ProfileName:  alias,
-		PinSHA256:    "SHA256_PIN",
+		PinSHA256:    hystSrv.getPin(),
 		Port:         int16(port),
 		Insecure:     0,
 	}

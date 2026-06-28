@@ -5,6 +5,7 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl \
+        openssl \
         ca-certificates \
         procps && \
     curl -fsSL \

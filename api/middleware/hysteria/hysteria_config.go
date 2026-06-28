@@ -7,15 +7,13 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
 type ConnectionParams struct {
-	AcmeDomains                []string
-	HysteriaMasqueradeProxyUrl string
+	ServerHost                 string
 	HysteriaListen             string
-	HysteriaAcmeEmail          string
 	HysteriaObfsPassword       string
+	HysteriaMasqueradeProxyUrl string
 	HysteriaBandwidthUp        int64
 	HysteriaBandwidthDown      int64
 }
@@ -45,11 +43,10 @@ func NewHysteriaService() *HysteriaService {
 		panic(err)
 	}
 	HystSrv.ConnParams = &ConnectionParams{
+		ServerHost:                 os.Getenv("HYSTERIA_SERVER_HOST"),
 		HysteriaListen:             os.Getenv("HYSTERIA_LISTEN"),
-		HysteriaAcmeEmail:          os.Getenv("HYSTERIA_ACME_EMAIL"),
 		HysteriaObfsPassword:       os.Getenv("HYSTERIA_OBFS_PASSWORD"),
 		HysteriaMasqueradeProxyUrl: os.Getenv("HYSTERIA_MASQUERADE_PROXY_URL"),
-		AcmeDomains:                strings.Split(os.Getenv("ACME_DOMAINS"), ","),
 		HysteriaBandwidthUp:        bandwidthUp,
 		HysteriaBandwidthDown:      bandwidthDown,
 	}
@@ -59,7 +56,7 @@ func NewHysteriaService() *HysteriaService {
 type Config struct {
 	Listen string `json:"listen"`
 
-	ACME *ACMEConfig `json:"acme,omitempty"`
+	TLS TLSConfig `json:"tls"`
 
 	Auth AuthConfig `json:"auth"`
 
@@ -70,14 +67,9 @@ type Config struct {
 	Masquerade *MasqueradeConfig `json:"masquerade,omitempty"`
 }
 
-type ACMEConfig struct {
-	Domains []string `json:"domains"`
-	Email   string   `json:"email"`
-
-	CA         string `json:"ca,omitempty"`
-	ListenHost string `json:"listenHost,omitempty"`
-	Dir        string `json:"dir,omitempty"`
-	Type       string `json:"type,omitempty"`
+type TLSConfig struct {
+	Cert string `json:"cert"`
+	Key  string `json:"key"`
 }
 
 type AuthConfig struct {
@@ -116,11 +108,9 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 	}
 	return &Config{
 		Listen: hystSrv.ConnParams.HysteriaListen,
-		ACME: &ACMEConfig{
-			Domains: hystSrv.ConnParams.AcmeDomains,
-			Email:   hystSrv.ConnParams.HysteriaAcmeEmail,
-			CA:      "letsencrypt",
-			Type:    "http",
+		TLS: TLSConfig{
+			Cert: "/etc/hysteria/server.crt",
+			Key:  "/etc/hysteria/server.key",
 		},
 		Auth: AuthConfig{
 			Type:     "userpass",
