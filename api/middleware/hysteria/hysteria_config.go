@@ -59,7 +59,7 @@ func NewHysteriaService() *HysteriaService {
 type Config struct {
 	Listen string `json:"listen"`
 
-	TLS *TLSConfig `json:"tls,omitempty"`
+	ACME *ACMEConfig `json:"acme,omitempty"`
 
 	Auth AuthConfig `json:"auth"`
 
@@ -70,14 +70,14 @@ type Config struct {
 	Masquerade *MasqueradeConfig `json:"masquerade,omitempty"`
 }
 
-type TLSConfig struct {
-	Type string     `json:"type"`
-	ACME ACMEConfig `json:"acme,omitempty"`
-}
-
 type ACMEConfig struct {
 	Domains []string `json:"domains"`
 	Email   string   `json:"email"`
+
+	CA         string `json:"ca,omitempty"`
+	ListenHost string `json:"listenHost,omitempty"`
+	Dir        string `json:"dir,omitempty"`
+	Type       string `json:"type,omitempty"`
 }
 
 type AuthConfig struct {
@@ -116,12 +116,11 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 	}
 	return &Config{
 		Listen: hystSrv.ConnParams.HysteriaListen,
-		TLS: &TLSConfig{
-			Type: "acme",
-			ACME: ACMEConfig{
-				Domains: hystSrv.ConnParams.AcmeDomains,
-				Email:   hystSrv.ConnParams.HysteriaAcmeEmail,
-			},
+		ACME: &ACMEConfig{
+			Domains: hystSrv.ConnParams.AcmeDomains,
+			Email:   hystSrv.ConnParams.HysteriaAcmeEmail,
+			CA:      "letsencrypt",
+			Type:    "http",
 		},
 		Auth: AuthConfig{
 			Type:     "userpass",
