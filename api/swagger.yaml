@@ -214,7 +214,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/ErrorCallback'
-  /xray/last_update:
+  /xray/get_last_update:
     get:
       summary: Get the last update timestamp of VLESS clients
       tags:
@@ -297,6 +297,84 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/ErrorCallback'
+    delete:
+      summary: Delete a VLESS client by ID (soft delete)
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the deleted client information
+          schema:
+            $ref: '#/definitions/ClientPublicOut'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: Client not found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /xray/clients/{client_id}/alias:
+    patch:
+      summary: Update alias for a VPN client
+      tags:
+        - XRay
+      security:
+        - Bearer: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateClientAliasIn'
+      responses:
+        '200':
+          description: Returns the updated client information
+          schema:
+            $ref: '#/definitions/ClientPublicOut'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: Client not found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
   /xray/clients/link/{client_id}:
     get:
       summary: Get an XRay link by client ID
@@ -318,6 +396,218 @@ paths:
             $ref: '#/definitions/ConnectionLinkOut'
         '401':
           description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /hysteria/config:
+    get:
+      summary: Get the Hysteria configuration
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns the Hysteria configuration
+          schema:
+            $ref: '#/definitions/HysteriaConfig'
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /hysteria/get_last_update:
+    get:
+      summary: Get the last update timestamp of Hysteria clients
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns the last update timestamp
+          schema:
+            $ref: '#/definitions/LastUpdateOut'
+        '401':
+          description: Missing or invalid token, or insufficient permissions
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: No clients found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /hysteria/clients/by_user_id/{user_id}:
+    get:
+      summary: Get Hysteria clients by user ID
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the clients' information
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ClientPublicOut'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /hysteria/clients/{client_id}:
+    get:
+      summary: Get a Hysteria client by ID
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the client's information
+          schema:
+            $ref: '#/definitions/HysteriaClientPrivateOut'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+    delete:
+      summary: Delete a Hysteria client by ID (soft delete)
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the deleted client information
+          schema:
+            $ref: '#/definitions/ClientPublicOut'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: Client not found
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /hysteria/clients/link/{client_id}:
+    get:
+      summary: Get a Hysteria connection link by client ID
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Returns the Hysteria connection link
+          schema:
+            $ref: '#/definitions/ConnectionLinkOut'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+  /hysteria/clients/{client_id}/alias:
+    patch:
+      summary: Update alias for a Hysteria client
+      tags:
+        - Hysteria
+      security:
+        - Bearer: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateClientAliasIn'
+      responses:
+        '200':
+          description: Returns the updated client information
+          schema:
+            $ref: '#/definitions/ClientPublicOut'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '401':
+          description: Missing or invalid token
+          schema:
+            $ref: '#/definitions/ErrorCallback'
+        '404':
+          description: Client not found
           schema:
             $ref: '#/definitions/ErrorCallback'
         '500':
@@ -590,6 +880,13 @@ definitions:
       updated_at:
         type: string
         format: date-time
+  UpdateClientAliasIn:
+    type: object
+    required:
+      - new_alias
+    properties:
+      new_alias:
+        type: string
   ConnectionLinkOut:
     type: object
     properties:
@@ -640,6 +937,77 @@ definitions:
         type: string
       vpn_type:
         type: string
+  HysteriaClientPrivateOut:
+    type: object
+    allOf:
+      - $ref: '#/definitions/ClientPublicOut'
+      - type: object
+        properties:
+          access_key:
+            type: string
+          user_id:
+            type: integer
+            format: int64
+          invite_id:
+            type: integer
+            format: int64
+  HysteriaConfig:
+    type: object
+    properties:
+      listen:
+        type: string
+      tls:
+        type: object
+        properties:
+          type:
+            type: string
+          acme:
+            type: object
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+              email:
+                type: string
+      auth:
+        type: object
+        properties:
+          type:
+            type: string
+          userpass:
+            type: object
+            additionalProperties:
+              type: string
+      bandwidth:
+        type: object
+        properties:
+          up:
+            type: string
+          down:
+            type: string
+      obfs:
+        type: object
+        properties:
+          type:
+            type: string
+          salamander:
+            type: object
+            properties:
+              password:
+                type: string
+      masquerade:
+        type: object
+        properties:
+          type:
+            type: string
+          proxy:
+            type: object
+            properties:
+              url:
+                type: string
+              rewriteHost:
+                type: boolean
   InviteCheckOut:
     type: object
     properties:

@@ -2,19 +2,19 @@ package handlers
 
 import (
 	"api/database"
+	"api/middleware/hysteria"
 	"api/middleware/security"
 	"api/middleware/utils"
-	"api/middleware/xray"
 	"errors"
 	"net/http"
 	"strconv"
 )
 
-func GetConfig(writer http.ResponseWriter, _ *http.Request) {
-	config, err := xray.XraySrv.GetConfig()
+func GetHysteriaConfig(writer http.ResponseWriter, _ *http.Request) {
+	config, err := hysteria.HystSrv.GetConfig()
 	if err != nil {
 		switch {
-		case errors.Is(err, xray.ErrorClientNotFound):
+		case errors.Is(err, hysteria.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
 		case errors.Is(err, database.InternalDBError):
 			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
@@ -26,14 +26,14 @@ func GetConfig(writer http.ResponseWriter, _ *http.Request) {
 	utils.WriteJSON(writer, http.StatusOK, *config)
 }
 
-func GetClientsByUserId(writer http.ResponseWriter, request *http.Request) {
+func GetHysteriaClientsByUserId(writer http.ResponseWriter, request *http.Request) {
 	userIdString := request.PathValue("user_id")
 	userId, err := strconv.ParseInt(userIdString, 10, 64)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	clients, err := xray.XraySrv.GetClientsByUserId(userId)
+	clients, err := hysteria.HystSrv.GetClientsByUserId(userId)
 	if err != nil {
 		switch {
 		case errors.Is(err, security.UserNotFound):
@@ -44,20 +44,19 @@ func GetClientsByUserId(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.WriteJSON(writer, http.StatusOK, *clients)
-	return
 }
 
-func GetClientById(writer http.ResponseWriter, request *http.Request) {
+func GetHysteriaClientById(writer http.ResponseWriter, request *http.Request) {
 	clientIdString := request.PathValue("client_id")
 	clientId, err := strconv.ParseInt(clientIdString, 10, 64)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	client, err := xray.XraySrv.GetClientById(clientId)
+	client, err := hysteria.HystSrv.GetClientById(clientId)
 	if err != nil {
 		switch {
-		case errors.Is(err, xray.ErrorClientNotFound):
+		case errors.Is(err, hysteria.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
 		default:
 			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
@@ -65,10 +64,9 @@ func GetClientById(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.WriteJSON(writer, http.StatusOK, *client)
-	return
 }
 
-func GetXrayLinkById(writer http.ResponseWriter, request *http.Request) {
+func GetHysteriaLinkById(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	userId := security.GetUserIdFromContext(&ctx)
 	clientId, err := strconv.ParseInt(request.PathValue("client_id"), 10, 64)
@@ -76,12 +74,12 @@ func GetXrayLinkById(writer http.ResponseWriter, request *http.Request) {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	link, err := xray.XraySrv.GetXrayLinkById(clientId, userId)
+	link, err := hysteria.HystSrv.GetXrayLinkById(clientId, userId)
 	if err != nil {
 		switch {
 		case errors.Is(err, database.InternalDBError):
 			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
-		case errors.Is(err, xray.ErrorClientNotFound):
+		case errors.Is(err, hysteria.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
 		default:
 			utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
@@ -89,15 +87,13 @@ func GetXrayLinkById(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.WriteJSON(writer, http.StatusOK, *link)
-	return
 }
 
-func GetLastUpdate(writer http.ResponseWriter, request *http.Request) {
-	glu, err := xray.XraySrv.GetLastUpdate()
+func GetHysteriaLastUpdate(writer http.ResponseWriter, request *http.Request) {
+	glu, err := hysteria.HystSrv.GetLastUpdate()
 	if err != nil {
-
 		switch {
-		case errors.Is(err, xray.ErrorClientNotFound):
+		case errors.Is(err, hysteria.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
 		default:
 			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
@@ -105,10 +101,9 @@ func GetLastUpdate(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.WriteJSON(writer, http.StatusOK, *glu)
-	return
 }
 
-func UpdateClientAlias(writer http.ResponseWriter, request *http.Request) {
+func UpdateHysteriaClientAlias(writer http.ResponseWriter, request *http.Request) {
 	clientIdString := request.PathValue("client_id")
 	clientId, err := strconv.ParseInt(clientIdString, 10, 64)
 	if err != nil {
@@ -117,20 +112,20 @@ func UpdateClientAlias(writer http.ResponseWriter, request *http.Request) {
 	}
 	ctx := request.Context()
 	userId := security.GetUserIdFromContext(&ctx)
-	updateIn := xray.UpdateClientAliasIn{}
+	updateIn := hysteria.UpdateClientAliasIn{}
 	err = utils.ReadJSON(request, &updateIn)
 	if err != nil {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	client, err := xray.XraySrv.UpdateClientAlias(clientId, userId, &updateIn)
+	client, err := hysteria.HystSrv.UpdateClientAlias(clientId, userId, &updateIn)
 	if err != nil {
 		switch {
-		case errors.Is(err, xray.ErrorClientNotFound):
+		case errors.Is(err, hysteria.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
-		case errors.Is(err, xray.ErrorClientForbidden):
+		case errors.Is(err, hysteria.ErrorClientForbidden):
 			utils.WriteJSON(writer, http.StatusForbidden, utils.ErrorCallback{ErrorText: err.Error()})
-		case errors.Is(err, xray.ErrorClientUpdateBad):
+		case errors.Is(err, hysteria.ErrorClientUpdateBad):
 			utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		default:
 			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})
@@ -138,10 +133,9 @@ func UpdateClientAlias(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.WriteJSON(writer, http.StatusOK, *client)
-	return
 }
 
-func DeleteClientById(writer http.ResponseWriter, request *http.Request) {
+func DeleteHysteriaClientById(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	userId := security.GetUserIdFromContext(&ctx)
 	clientIdString := request.PathValue("client_id")
@@ -150,14 +144,14 @@ func DeleteClientById(writer http.ResponseWriter, request *http.Request) {
 		utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		return
 	}
-	client, err := xray.XraySrv.DeleteClientById(clientId, userId)
+	client, err := hysteria.HystSrv.DeleteClientById(clientId, userId)
 	if err != nil {
 		switch {
-		case errors.Is(err, xray.ErrorClientNotFound):
+		case errors.Is(err, hysteria.ErrorClientNotFound):
 			utils.WriteJSON(writer, http.StatusNotFound, utils.ErrorCallback{ErrorText: err.Error()})
-		case errors.Is(err, xray.ErrorClientForbidden):
+		case errors.Is(err, hysteria.ErrorClientForbidden):
 			utils.WriteJSON(writer, http.StatusForbidden, utils.ErrorCallback{ErrorText: err.Error()})
-		case errors.Is(err, xray.ErrorClientDeleteBad):
+		case errors.Is(err, hysteria.ErrorClientDeleteBad):
 			utils.WriteJSON(writer, http.StatusBadRequest, utils.ErrorCallback{ErrorText: err.Error()})
 		default:
 			utils.WriteJSON(writer, http.StatusInternalServerError, utils.ErrorCallback{ErrorText: err.Error()})

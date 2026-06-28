@@ -20,10 +20,21 @@ func main() {
 
 	// XRay Service
 	mux.Handle("GET /api/v1/xray/config", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetConfig))))
-	mux.Handle("GET /api/v1/xray/last_update", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.LastUpdate))))
+	mux.Handle("GET /api/v1/xray/get_last_update", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetLastUpdate))))
 	mux.Handle("GET /api/v1/xray/clients/by_user_id/{user_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetClientsByUserId)))
 	mux.Handle("GET /api/v1/xray/clients/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetClientById)))
 	mux.Handle("GET /api/v1/xray/clients/link/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetXrayLinkById)))
+	mux.Handle("PATCH /api/v1/xray/clients/{client_id}/alias", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.UpdateClientAlias)))
+	mux.Handle("DELETE /api/v1/xray/clients/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.DeleteClientById)))
+
+	// Hysteria Service
+	mux.Handle("GET /api/v1/hysteria/config", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetHysteriaConfig))))
+	mux.Handle("GET /api/v1/hysteria/get_last_update", handlers.SecSrv.RequireAuth(handlers.SecSrv.AllowForRole(4, http.HandlerFunc(handlers.GetHysteriaLastUpdate))))
+	mux.Handle("GET /api/v1/hysteria/clients/by_user_id/{user_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetHysteriaClientsByUserId)))
+	mux.Handle("GET /api/v1/hysteria/clients/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetHysteriaClientById)))
+	mux.Handle("GET /api/v1/hysteria/clients/link/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.GetHysteriaLinkById)))
+	mux.Handle("PATCH /api/v1/hysteria/clients/{client_id}/alias", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.UpdateHysteriaClientAlias)))
+	mux.Handle("DELETE /api/v1/hysteria/clients/{client_id}", handlers.SecSrv.RequireAuth(http.HandlerFunc(handlers.DeleteHysteriaClientById)))
 
 	// Invite Service
 	mux.Handle("POST /api/v1/invite/new",

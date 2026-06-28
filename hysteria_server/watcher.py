@@ -23,18 +23,18 @@ LOGIN_PASSWORD = os.getenv("WATCHER_PASSWORD", "")
 
 POLL_INTERVAL = int(os.getenv("WATCHER_POLL_INTERVAL", "10"))
 
-XRAY_CONFIG_PATH = os.getenv("WATCHER_XRAY_CONFIG_PATH", "/etc/xray/config.json")
+HYSTERIA_CONFIG_PATH = os.getenv("WATCHER_HYSTERIA_CONFIG_PATH", "/etc/hysteria/config.json")
 
 # Пример:
-# RESTART_COMMAND="sh -c 'test -f /tmp/xray.pid && kill $(cat /tmp/xray.pid) || true'"
+# RESTART_COMMAND="sh -c 'test -f /tmp/hysteria.pid && kill $(cat /tmp/hysteria.pid) || true'"
 RESTART_COMMAND = os.getenv("RESTART_COMMAND", "")
 
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
-# Эндпоинты можно переопределить через env, если у тебя другие пути.
-LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/auth/login")
-LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/xray/get_last_update")
-CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/xray/config")
+# Эндпоинты
+LOGIN_ENDPOINT = os.getenv("LOGIN_ENDPOINT", "/api/v1/security/login")
+LAST_UPDATE_ENDPOINT = os.getenv("LAST_UPDATE_ENDPOINT", "/api/v1/hysteria/get_last_update")
+CONFIG_ENDPOINT = os.getenv("CONFIG_ENDPOINT", "/api/v1/hysteria/config")
 
 # Если API отдаёт токен не в поле "token", можно переопределить.
 TOKEN_FIELD = os.getenv("TOKEN_FIELD", "token")
@@ -58,7 +58,7 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
-log = logging.getLogger("xray-config-watcher")
+log = logging.getLogger("hysteria-config-watcher")
 
 
 class WatcherError(Exception):
@@ -138,14 +138,6 @@ def run_command(command: list[str], timeout: int = 30) -> subprocess.CompletedPr
 # ----------------------------
 
 def login() -> str:
-    """
-    Ожидает, что API вернёт JSON:
-    {
-      "token": "..."
-    }
-
-    Если у тебя поле называется иначе, задай TOKEN_FIELD.
-    """
     payload = {
         "email": LOGIN_EMAIL,
         "password": LOGIN_PASSWORD,
@@ -198,30 +190,14 @@ def api_get(token: str, endpoint: str) -> Any:
 
 
 def get_last_update(token: str) -> Optional[datetime]:
-    """
-    Поддерживает ответы вида:
-
-    1)
-    {
-      "last_update": "2026-05-31T12:34:56Z"
-    }
-
-    2)
-    {
-      "updated_at": "2026-05-31T12:34:56Z"
-    }
-
-    3)
-    "2026-05-31T12:34:56Z"
-    """
     data = api_get(token, LAST_UPDATE_ENDPOINT)
 
     if isinstance(data, dict):
         raw = (
-                data.get("last_update")
-                or data.get("lastUpdate")
-                or data.get("updated_at")
-                or data.get("updatedAt")
+            data.get("last_update")
+            or data.get("lastUpdate")
+            or data.get("updated_at")
+            or data.get("updatedAt")
         )
     else:
         raw = data
@@ -233,7 +209,7 @@ def get_last_update(token: str) -> Optional[datetime]:
 
 def get_config(token: str) -> dict[str, Any]:
     """
-    Ожидает, что API вернёт готовый Xray config JSON.
+    Ожидает, что API вернёт готовый Hysteria2 config JSON.
     """
     data = api_get(token, CONFIG_ENDPOINT)
 
@@ -244,40 +220,40 @@ def get_config(token: str) -> dict[str, Any]:
 
 
 # ----------------------------
-# Xray config handling
+# Hysteria config handling
 # ----------------------------
 
 def validate_config_file(path: str) -> None:
     """
     Проверяет конфиг командой:
-    xray run -test -c <path>
+    hysteria check -c <path>
     """
-    log.info("Validating Xray config: %s", path)
+    log.info("Validating Hysteria config: %s", path)
 
-    result = run_command(["xray", "run", "-test", "-c", path], timeout=30)
+    result = run_command(["hysteria", "check", "-c", path], timeout=30)
 
     if result.returncode != 0:
         raise WatcherError(
-            "Invalid Xray config\n"
+            "Invalid Hysteria config\n"
             f"exit_code={result.returncode}\n"
             f"stdout={result.stdout}\n"
             f"stderr={result.stderr}"
         )
 
-    log.info("Xray config is valid")
+    log.info("Hysteria config is valid")
 
 
 def write_config_atomically(config: dict[str, Any]) -> bool:
     """
     Пишет конфиг атомарно:
-    1. .config.json.tmp.json
+    1. .config.json.tmp
     2. validate tmp
     3. replace config.json
 
     Возвращает True, если файл реально изменился.
     """
-    config_dir = os.path.dirname(XRAY_CONFIG_PATH)
-    config_base = os.path.basename(XRAY_CONFIG_PATH)
+    config_dir = os.path.dirname(HYSTERIA_CONFIG_PATH)
+    config_base = os.path.basename(HYSTERIA_CONFIG_PATH)
 
     if config_dir:
         os.makedirs(config_dir, exist_ok=True)
@@ -285,37 +261,37 @@ def write_config_atomically(config: dict[str, Any]) -> bool:
     new_content = json.dumps(config, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
 
     old_content = None
-    if os.path.exists(XRAY_CONFIG_PATH):
-        with open(XRAY_CONFIG_PATH, "r", encoding="utf-8") as f:
+    if os.path.exists(HYSTERIA_CONFIG_PATH):
+        with open(HYSTERIA_CONFIG_PATH, "r", encoding="utf-8") as f:
             old_content = f.read()
 
     if old_content == new_content:
         log.info("Config content is unchanged, skipping write")
         return False
 
-    tmp_path = os.path.join(config_dir, "." + config_base + ".tmp.json")
+    tmp_path = os.path.join(config_dir, "." + config_base + ".tmp")
 
     with open(tmp_path, "w", encoding="utf-8") as f:
         f.write(new_content)
 
     validate_config_file(tmp_path)
 
-    os.replace(tmp_path, XRAY_CONFIG_PATH)
+    os.replace(tmp_path, HYSTERIA_CONFIG_PATH)
 
-    log.info("Config written: %s", XRAY_CONFIG_PATH)
+    log.info("Config written: %s", HYSTERIA_CONFIG_PATH)
     return True
 
 
-def restart_xray() -> None:
+def restart_hysteria() -> None:
     """
-    В твоей схеме RESTART_COMMAND обычно убивает Xray.
+    RESTART_COMMAND обычно убивает Hysteria.
     start.sh замечает, что процесс умер, и запускает его заново.
     """
     if not RESTART_COMMAND:
-        log.warning("RESTART_COMMAND is empty, skipping Xray restart")
+        log.warning("RESTART_COMMAND is empty, skipping Hysteria restart")
         return
 
-    log.info("Restarting Xray with command: %s", RESTART_COMMAND)
+    log.info("Restarting Hysteria with command: %s", RESTART_COMMAND)
 
     result = subprocess.run(
         RESTART_COMMAND,
@@ -338,7 +314,7 @@ def restart_xray() -> None:
 
 def sync_config(token: str) -> bool:
     """
-    Забирает конфиг из API, валидирует, пишет, рестартит Xray при изменении.
+    Забирает конфиг из API, валидирует, пишет, рестартит Hysteria при изменении.
 
     Возвращает True, если конфиг изменился и рестарт был вызван.
     """
@@ -346,9 +322,9 @@ def sync_config(token: str) -> bool:
     changed = write_config_atomically(config)
 
     if changed:
-        restart_xray()
+        restart_hysteria()
     else:
-        log.info("Xray restart is not needed")
+        log.info("Hysteria restart is not needed")
 
     return changed
 
@@ -360,10 +336,10 @@ def sync_config(token: str) -> bool:
 def run() -> None:
     require_env()
 
-    log.info("Starting Xray Config Watcher")
+    log.info("Starting Hysteria Config Watcher")
     log.info("API_URL=%s", API_URL)
     log.info("POLL_INTERVAL=%s", POLL_INTERVAL)
-    log.info("XRAY_CONFIG_PATH=%s", XRAY_CONFIG_PATH)
+    log.info("HYSTERIA_CONFIG_PATH=%s", HYSTERIA_CONFIG_PATH)
     log.info("LOGIN_ENDPOINT=%s", LOGIN_ENDPOINT)
     log.info("LAST_UPDATE_ENDPOINT=%s", LAST_UPDATE_ENDPOINT)
     log.info("CONFIG_ENDPOINT=%s", CONFIG_ENDPOINT)
@@ -410,8 +386,6 @@ def run() -> None:
                 sync_config(token)
 
                 # Важно: обновляем last_seen_update после успешной записи/валидации.
-                # Если api_last_update пустой, используем текущее время, чтобы не
-                # синкаться бесконечно на каждом цикле при FETCH_CONFIG_ON_START.
                 last_seen_update = api_last_update or datetime.now(timezone.utc)
 
         except PermissionError as e:

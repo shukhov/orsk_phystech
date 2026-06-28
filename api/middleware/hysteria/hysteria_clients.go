@@ -1,4 +1,4 @@
-package xray
+package hysteria
 
 import (
 	"api/database"
@@ -10,12 +10,14 @@ import (
 )
 
 var (
-	ErrorClientNotFound  = errors.New("xray client is not found")
-	ErrorClientCreateBad = errors.New("incorrect data for create new vpn client")
-	ErrorClientUpdateBad = errors.New("incorrect data for update vpn client alias")
-	ErrorClientDeleteBad = errors.New("incorrect data for delete vpn client")
-	ErrorClientForbidden = errors.New("client does not belong to this user")
+	ErrorClientNotFound  = errors.New("hysteria client is not found")
+	ErrorClientCreateBad = errors.New("incorrect data for create new hysteria client")
+	ErrorClientUpdateBad = errors.New("incorrect data for update hysteria client alias")
+	ErrorClientDeleteBad = errors.New("incorrect data for delete hysteria client")
+	ErrorClientForbidden = errors.New("hysteria client does not belong to this user")
 )
+
+type Userpass = map[string]string
 
 type ClientPublicOut struct {
 	Id        int64     `json:"id"`
@@ -27,9 +29,9 @@ type ClientPublicOut struct {
 
 type ClientPrivateOut struct {
 	ClientPublicOut
-	AccessKey string `json:"access_key"`
-	UserId    int64  `json:"user_id"`
-	InviteId  int64  `json:"invite_id"`
+	Password string `json:"access_key"`
+	UserId   int64  `json:"user_id"`
+	InviteId int64  `json:"invite_id"`
 }
 
 type NewClientIn struct {
@@ -46,10 +48,10 @@ type LastUpdateOut struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (xraySrv *XrayService) GetClientById(clientId int64) (*ClientPrivateOut, error) {
+func (hystSrv *HysteriaService) GetClientById(clientId int64) (*ClientPrivateOut, error) {
 	clientOut := new(ClientPrivateOut)
-	err := xraySrv.DB.QueryRow(GetClientByIdQuery, clientId).Scan(
-		&clientOut.Id, &clientOut.AccessKey, &clientOut.UserId,
+	err := hystSrv.DB.QueryRow(GetClientByIdQuery, clientId).Scan(
+		&clientOut.Id, &clientOut.Password, &clientOut.UserId,
 		&clientOut.InviteId, &clientOut.Alias, &clientOut.Status,
 		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
@@ -57,14 +59,14 @@ func (xraySrv *XrayService) GetClientById(clientId int64) (*ClientPrivateOut, er
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrorClientNotFound
 		default:
-			xraySrv.logger.Printf("error: %#v", err)
+			hystSrv.logger.Printf("error: %#v", err)
 			return nil, database.InternalDBError
 		}
 	}
 	return clientOut, nil
 }
 
-func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut, error) {
+func (hystSrv *HysteriaService) GetClientsByUserId(userId int64) (*[]ClientPublicOut, error) {
 	_, err := security.SecSrv.GetUserById(userId)
 	if err != nil {
 		return nil, security.UserNotFound
@@ -72,9 +74,9 @@ func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut
 
 	clientList := make([]ClientPublicOut, 0, 3)
 
-	queryResult, err := xraySrv.DB.Query(GetClientsByUserIdQuery, userId)
+	queryResult, err := hystSrv.DB.Query(GetClientsByUserIdQuery, userId)
 	if err != nil {
-		xraySrv.logger.Printf("error %#v", err)
+		hystSrv.logger.Printf("error %#v", err)
 		return nil, database.InternalDBError
 	}
 	for queryResult.Next() {
@@ -83,7 +85,7 @@ func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut
 			&client.Id, &client.Alias, &client.Status,
 			&client.CreatedAt, &client.UpdatedAt)
 		if err != nil {
-			xraySrv.logger.Printf("error %#v", err)
+			hystSrv.logger.Printf("error %#v", err)
 			return nil, database.InternalDBError
 		}
 		clientList = append(clientList, client)
@@ -91,11 +93,11 @@ func (xraySrv *XrayService) GetClientsByUserId(userId int64) (*[]ClientPublicOut
 	return &clientList, nil
 }
 
-func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.Tx) (*ClientPublicOut, error) {
+func (hystSrv *HysteriaService) NewClient(newClientIn *NewClientIn, externalTx *sql.Tx) (*ClientPublicOut, error) {
 	var isExternalTx = true
 	if externalTx == nil {
 		var err error
-		externalTx, err = xraySrv.DB.BeginTx(context.Background(), nil)
+		externalTx, err = hystSrv.DB.BeginTx(context.Background(), nil)
 		if err != nil {
 			func() { _ = externalTx.Rollback() }()
 			return nil, database.InternalDBError
@@ -108,7 +110,7 @@ func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.
 		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
 		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
-		xraySrv.logger.Printf("%#v", err)
+		hystSrv.logger.Printf("%#v", err)
 		return nil, ErrorClientCreateBad
 	}
 	if !isExternalTx {
@@ -120,23 +122,25 @@ func (xraySrv *XrayService) NewClient(newClientIn *NewClientIn, externalTx *sql.
 	return &clientOut, nil
 }
 
-func (xraySrv *XrayService) GetLastUpdate() (*LastUpdateOut, error) {
-	lastUpdateOut := LastUpdateOut{}
-	err := xraySrv.DB.QueryRow(LastUpdateQuery).Scan(&lastUpdateOut.UpdatedAt)
+func (hystSrv *HysteriaService) GetAllInConfigClients() (*Userpass, error) {
+	inConfigClient := make(Userpass)
+	rows, err := hystSrv.DB.Query(GetAllInConfigClientsQuery)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrorClientNotFound
-		default:
-			xraySrv.logger.Printf("last update error: %#v", err)
+		return nil, database.InternalDBError
+	}
+	for rows.Next() {
+		var user, password string
+		err = rows.Scan(&user, &password)
+		if err != nil {
 			return nil, database.InternalDBError
 		}
+		inConfigClient[user] = password
 	}
-	return &lastUpdateOut, nil
+	return &inConfigClient, nil
 }
 
-func (xraySrv *XrayService) UpdateClientAlias(clientId int64, userId int64, updateIn *UpdateClientAliasIn) (*ClientPublicOut, error) {
-	client, err := xraySrv.GetClientById(clientId)
+func (hystSrv *HysteriaService) UpdateClientAlias(clientId int64, userId int64, updateIn *UpdateClientAliasIn) (*ClientPublicOut, error) {
+	client, err := hystSrv.GetClientById(clientId)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +148,7 @@ func (xraySrv *XrayService) UpdateClientAlias(clientId int64, userId int64, upda
 		return nil, ErrorClientForbidden
 	}
 	clientOut := new(ClientPublicOut)
-	err = xraySrv.DB.QueryRow(UpdateClientAliasQuery, updateIn.NewAlias, clientId).Scan(
+	err = hystSrv.DB.QueryRow(UpdateClientAliasQuery, updateIn.NewAlias, clientId).Scan(
 		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
 		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
@@ -152,15 +156,30 @@ func (xraySrv *XrayService) UpdateClientAlias(clientId int64, userId int64, upda
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrorClientNotFound
 		default:
-			xraySrv.logger.Printf("error updating client alias: %#v", err)
+			hystSrv.logger.Printf("error updating client alias: %#v", err)
 			return nil, ErrorClientUpdateBad
 		}
 	}
 	return clientOut, nil
 }
 
-func (xraySrv *XrayService) DeleteClientById(clientId int64, userId int64) (*ClientPublicOut, error) {
-	client, err := xraySrv.GetClientById(clientId)
+func (hystSrv *HysteriaService) GetLastUpdate() (*LastUpdateOut, error) {
+	lastUpdateOut := LastUpdateOut{}
+	err := hystSrv.DB.QueryRow(LastUpdateQuery).Scan(&lastUpdateOut.UpdatedAt)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrorClientNotFound
+		default:
+			hystSrv.logger.Printf("last update error: %#v", err)
+			return nil, database.InternalDBError
+		}
+	}
+	return &lastUpdateOut, nil
+}
+
+func (hystSrv *HysteriaService) DeleteClientById(clientId int64, userId int64) (*ClientPublicOut, error) {
+	client, err := hystSrv.GetClientById(clientId)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +187,7 @@ func (xraySrv *XrayService) DeleteClientById(clientId int64, userId int64) (*Cli
 		return nil, ErrorClientForbidden
 	}
 	clientOut := new(ClientPublicOut)
-	err = xraySrv.DB.QueryRow(DeleteClientByIdQuery, clientId).Scan(
+	err = hystSrv.DB.QueryRow(DeleteClientByIdQuery, clientId).Scan(
 		&clientOut.Id, &clientOut.Alias, &clientOut.Status,
 		&clientOut.CreatedAt, &clientOut.UpdatedAt)
 	if err != nil {
@@ -176,7 +195,7 @@ func (xraySrv *XrayService) DeleteClientById(clientId int64, userId int64) (*Cli
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrorClientNotFound
 		default:
-			xraySrv.logger.Printf("error deleting client: %#v", err)
+			hystSrv.logger.Printf("error deleting client: %#v", err)
 			return nil, ErrorClientDeleteBad
 		}
 	}

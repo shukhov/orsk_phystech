@@ -69,6 +69,13 @@ services:
       XRAY_SERVER_NAMES: ${XRAY_SERVER_NAMES}
       XRAY_PRIVATE_KEY: ${XRAY_PRIVATE_KEY}
       XRAY_SHORT_IDS: ${XRAY_SHORT_IDS}
+      HYSTERIA_LISTEN:  ${HYSTERIA_LISTEN}
+      HYSTERIA_ACME_EMAIL: ${HYSTERIA_ACME_EMAIL}
+      ACME_DOMAINS: ${ACME_DOMAINS}
+      HYSTERIA_OBFS_PASSWORD: ${HYSTERIA_OBFS_PASSWORD}
+      HYSTERIA_MASQUERADE_PROXY_URL: ${HYSTERIA_MASQUERADE_PROXY_URL}
+      HYSTERIA_BANDWIDTH_UP: ${HYSTERIA_BANDWIDTH_UP}
+      HYSTERIA_BANDWIDTH_DOWN: ${HYSTERIA_BANDWIDTH_DOWN}
     depends_on:
       db_init:
         condition: service_completed_successfully
@@ -106,7 +113,30 @@ services:
       api:
         condition: service_started
 
+  hysteria_server:
+    build: ./hysteria_server
+    restart: unless-stopped
+    ports:
+      - "643:643/tcp"
+      - "643:643/udp"
+    environment:
+      WATCHER_API_URL: ${WATCHER_API_URL}
+      WATCHER_EMAIL: ${WATCHER_HYSTERIA_EMAIL}
+      WATCHER_PASSWORD: ${WATCHER_HYSTERIA_PASSWORD}
+      WATCHER_POLL_INTERVAL: ${WATCHER_POLL_INTERVAL}
+      WATCHER_HYSTERIA_CONFIG_PATH: ${WATCHER_HYSTERIA_CONFIG_PATH}
+      LOGIN_ENDPOINT: /api/v1/security/login
+      LAST_UPDATE_ENDPOINT: /api/v1/hysteria/get_last_update
+      CONFIG_ENDPOINT: /api/v1/hysteria/config
+      RESTART_COMMAND: sh -c 'test -f /tmp/hysteria.pid && kill $$(cat /tmp/hysteria.pid) || true'
+    volumes:
+      - hysteria_etc:/etc/hysteria
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   pg_data: {}
   xray_state: {}
   xray_etc: {}
+  hysteria_etc: {}

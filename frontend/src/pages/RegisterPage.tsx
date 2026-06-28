@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register, login, getMe } from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
+import ConsentSidebar from '@/components/ConsentSidebar';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -18,7 +19,6 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ username, email, password });
-      // После регистрации сразу логиним
       const { token } = await login({ email, password });
       localStorage.setItem('token', token);
       const me = await getMe();
@@ -33,6 +33,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <ConsentSidebar />
       <div className="w-full max-w-md bg-gray-800 rounded-xl p-8 shadow-lg">
         <h1 className="text-2xl font-bold text-white mb-6 text-center">Регистрация</h1>
 
