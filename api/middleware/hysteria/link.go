@@ -60,7 +60,7 @@ func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias str
 		ProfileName:  alias,
 		PinSHA256:    hystSrv.getPin(),
 		Port:         int16(port),
-		Insecure:     0,
+		Insecure:     1,
 	}
 }
 
@@ -68,13 +68,29 @@ func (hystSrv *HysteriaService) link(p *Params) string {
 	q := url.Values{}
 	q.Set("obfs", p.Obfs)
 	q.Set("obfs-password", p.ObfsPassword)
-	q.Set("sni", p.Sni)
+
+	if p.Sni != "" {
+		q.Set("sni", p.Sni)
+	}
+
 	q.Set("insecure", strconv.Itoa(int(p.Insecure)))
-	q.Set("pinSHA256", p.PinSHA256)
+
+	if p.PinSHA256 != "" {
+		q.Set("pinSHA256", p.PinSHA256)
+	}
+
+	// username:password -> percent-encode
+	auth := url.QueryEscape(fmt.Sprintf("%s:%s", p.Username, p.Password))
 
 	frag := url.PathEscape(p.ProfileName)
-	return fmt.Sprintf("hysteria2://%s:%s@%s:%d/?%s#%s",
-		p.Username, p.Password, p.Domain, p.Port, q.Encode(), frag,
+
+	return fmt.Sprintf(
+		"hysteria2://%s@%s:%d/?%s#%s",
+		auth,
+		p.Domain,
+		p.Port,
+		q.Encode(),
+		frag,
 	)
 }
 
