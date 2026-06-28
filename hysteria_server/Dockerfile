@@ -2,10 +2,11 @@ FROM python:3.12-alpine
 
 WORKDIR /app
 
+ARG HYSTERIA_VERSION=v2.6.2
+
 # Устанавливаем Hysteria2 и утилиты
-RUN apk add --no-cache curl procps && \
-    HYSTERIA_VERSION=$(curl -sL https://api.github.com/repos/apernet/hysteria/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/') && \
-    curl -sL https://github.com/apernet/hysteria/releases/download/v${HYSTERIA_VERSION}/hysteria-linux-amd64 -o /usr/local/bin/hysteria && \
+RUN apk add --no-cache curl ca-certificates procps && \
+    curl -sL https://github.com/apernet/hysteria/releases/download/${HYSTERIA_VERSION}/hysteria-linux-amd64 -o /usr/local/bin/hysteria && \
     chmod +x /usr/local/bin/hysteria && \
     apk del curl
 
