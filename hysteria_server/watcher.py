@@ -18,8 +18,8 @@ import requests
 
 API_URL = os.getenv("WATCHER_API_URL", "").rstrip("/")
 
-LOGIN_EMAIL = os.getenv("WATCHER_EMAIL", "")
-LOGIN_PASSWORD = os.getenv("WATCHER_PASSWORD", "")
+WATCHER_EMAIL = os.getenv("WATCHER_EMAIL", "")
+WATCHER_PASSWORD = os.getenv("WATCHER_PASSWORD", "")
 
 POLL_INTERVAL = int(os.getenv("WATCHER_POLL_INTERVAL", "10"))
 
@@ -74,10 +74,10 @@ def require_env() -> None:
 
     if not API_URL:
         missing.append("API_URL")
-    if not LOGIN_EMAIL:
-        missing.append("LOGIN_EMAIL")
-    if not LOGIN_PASSWORD:
-        missing.append("LOGIN_PASSWORD")
+    if not WATCHER_EMAIL:
+        missing.append("WatcherLoginEmail")
+    if not WATCHER_PASSWORD:
+        missing.append("WatcherLoginPassword")
 
     if missing:
         raise WatcherError(f"Missing required env vars: {', '.join(missing)}")
@@ -139,8 +139,8 @@ def run_command(command: list[str], timeout: int = 30) -> subprocess.CompletedPr
 
 def login() -> str:
     payload = {
-        "email": LOGIN_EMAIL,
-        "password": LOGIN_PASSWORD,
+        "email": WATCHER_EMAIL,
+        "password": WATCHER_PASSWORD,
     }
 
     log.info("Logging in to API: %s", url(LOGIN_ENDPOINT))
