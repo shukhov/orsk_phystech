@@ -223,44 +223,12 @@ def get_config(token: str) -> dict[str, Any]:
 # Hysteria config handling
 # ----------------------------
 
-def validate_config_file(path: str) -> None:
-    log.info("Validating Hysteria config: %s", path)
-    proc = subprocess.Popen(
-        ["hysteria", "server", "-c", path],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-
-    )
-    # если за 2 секунды процесс завершился —
-    # значит есть ошибка в конфиге
-    time.sleep(2)
-    if proc.poll() is not None:
-        stdout, stderr = proc.communicate()
-        raise WatcherError(
-            "Invalid Hysteria config\n"
-            f"exit_code={proc.returncode}\n"
-            f"stdout={stdout}\n"
-            f"stderr={stderr}"
-
-        )
-    # конфиг валиден — завершаем тестовый процесс
-    proc.terminate()
-    try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-    log.info("Hysteria config is valid")
-
 
 def write_config_atomically(config: dict[str, Any]) -> bool:
     """
-    Пишет конфиг атомарно:
-    1. .config.json.tmp
-    2. validate tmp
-    3. replace config.json
+    Атомарно записывает конфиг.
 
-    Возвращает True, если файл реально изменился.
+    Возвращает True, если содержимое изменилось.
     """
     config_dir = os.path.dirname(HYSTERIA_CONFIG_PATH)
     config_base = os.path.basename(HYSTERIA_CONFIG_PATH)
@@ -268,7 +236,12 @@ def write_config_atomically(config: dict[str, Any]) -> bool:
     if config_dir:
         os.makedirs(config_dir, exist_ok=True)
 
-    new_content = json.dumps(config, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    new_content = json.dumps(
+        config,
+        indent=2,
+        ensure_ascii=False,
+        sort_keys=True,
+    ) + "\n"
 
     old_content = None
     if os.path.exists(HYSTERIA_CONFIG_PATH):
@@ -276,19 +249,17 @@ def write_config_atomically(config: dict[str, Any]) -> bool:
             old_content = f.read()
 
     if old_content == new_content:
-        log.info("Config content is unchanged, skipping write")
+        log.info("Config content is unchanged")
         return False
 
-    tmp_path = os.path.join(config_dir, "." + config_base + ".tmp")
+    tmp_path = HYSTERIA_CONFIG_PATH + ".tmp"
 
     with open(tmp_path, "w", encoding="utf-8") as f:
         f.write(new_content)
 
-    validate_config_file(tmp_path)
-
     os.replace(tmp_path, HYSTERIA_CONFIG_PATH)
 
-    log.info("Config written: %s", HYSTERIA_CONFIG_PATH)
+    log.info("Config updated: %s", HYSTERIA_CONFIG_PATH)
     return True
 
 
