@@ -14,6 +14,7 @@ type ConnectionParams struct {
 	HysteriaListen             string
 	HysteriaObfsPassword       string
 	HysteriaMasqueradeProxyUrl string
+	HysteriaSni                string
 	HysteriaBandwidthUp        int64
 	HysteriaBandwidthDown      int64
 }
@@ -47,6 +48,7 @@ func NewHysteriaService() *HysteriaService {
 		HysteriaListen:             os.Getenv("HYSTERIA_LISTEN"),
 		HysteriaObfsPassword:       os.Getenv("HYSTERIA_OBFS_PASSWORD"),
 		HysteriaMasqueradeProxyUrl: os.Getenv("HYSTERIA_MASQUERADE_PROXY_URL"),
+		HysteriaSni:                os.Getenv("HYSTERIA_SNI"),
 		HysteriaBandwidthUp:        bandwidthUp,
 		HysteriaBandwidthDown:      bandwidthDown,
 	}

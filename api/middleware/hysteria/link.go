@@ -56,7 +56,7 @@ func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias str
 		Domain:       hystSrv.ConnParams.HysteriaHost,
 		ObfsPassword: hystSrv.ConnParams.HysteriaObfsPassword,
 		Obfs:         "salamander",
-		Sni:          hystSrv.ConnParams.HysteriaMasqueradeProxyUrl,
+		Sni:          hystSrv.ConnParams.HysteriaSni,
 		ProfileName:  alias,
 		PinSHA256:    hystSrv.getPin(),
 		Port:         int16(port),
