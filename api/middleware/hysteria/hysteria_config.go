@@ -124,12 +124,12 @@ func (hystSrv *HysteriaService) GetConfig() (*Config, error) {
 			Up:   fmt.Sprintf("%d mbps", hystSrv.ConnParams.HysteriaBandwidthUp),
 			Down: fmt.Sprintf("%d mbps", hystSrv.ConnParams.HysteriaBandwidthDown),
 		},
-		//Obfs: &ObfsConfig{
-		//	Type: "salamander",
-		//	Salamander: SalamanderObfs{
-		//		Password: hystSrv.ConnParams.HysteriaObfsPassword,
-		//	},
-		//},
+		Obfs: &ObfsConfig{
+			Type: "salamander",
+			Salamander: SalamanderObfs{
+				Password: hystSrv.ConnParams.HysteriaObfsPassword,
+			},
+		},
 		Masquerade: &MasqueradeConfig{
 			Type: "proxy",
 			Proxy: MasqueradeProxy{
