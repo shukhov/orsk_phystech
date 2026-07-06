@@ -66,8 +66,8 @@ func (hystSrv *HysteriaService) makeXrayLinkParams(username, password, alias str
 
 func (hystSrv *HysteriaService) link(p *Params) string {
 	q := url.Values{}
-	q.Set("obfs", p.Obfs)
-	q.Set("obfs-password", p.ObfsPassword)
+	//q.Set("obfs", p.Obfs)
+	//q.Set("obfs-password", p.ObfsPassword)
 
 	if p.Sni != "" {
 		q.Set("sni", p.Sni)
